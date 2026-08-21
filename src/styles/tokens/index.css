@@ -1,0 +1,11 @@
+/*
+  index.css (tokens)
+  Single entry point for the token layer. Import this one file wherever
+  tokens are needed — never import the individual token files directly
+  from components, so the token layer stays swappable as a unit.
+*/
+
+@import "./colors.css";
+@import "./typography.css";
+@import "./spacing.css";
+@import "./motion.css";

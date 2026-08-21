@@ -1,0 +1,25 @@
+/*
+  motion.css
+  Motion tokens. Used sparingly and deliberately — this is a data/safety
+  product, so animation should orient the user (map pans, data transitions),
+  never decorate. Respects prefers-reduced-motion throughout.
+*/
+
+:root {
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
+  --duration-slow: 400ms;
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

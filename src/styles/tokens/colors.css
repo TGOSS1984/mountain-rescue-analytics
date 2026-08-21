@@ -1,0 +1,50 @@
+/*
+  colors.css
+  Core colour tokens for UK Mountain Rescue Incident Analytics.
+
+  Palette is inspired by the visual language UK search-and-rescue teams
+  actually use in the field — international orange for high-vis kit,
+  deep ordnance-survey green, and the flat slate greys of a hill in
+  bad weather — rather than a generic "brand red." Nothing here copies
+  any specific team or charity's logo or trademarked assets.
+*/
+
+:root {
+  /* Base neutrals */
+  --color-ink: #1a2430;          /* primary background, dark surfaces */
+  --color-ink-soft: #26313f;     /* elevated dark surfaces, cards on dark */
+  --color-mist: #edefea;         /* light background, warm off-white */
+  --color-mist-soft: #f7f7f3;    /* lightest surface, page background */
+  --color-slate: #5b6670;        /* secondary text, borders, muted UI */
+  --color-slate-soft: #98a1a8;   /* placeholder text, disabled states */
+
+  /* Accent */
+  --color-rescue-orange: #e8541e;      /* primary accent — CTAs, alerts, active states */
+  --color-rescue-orange-dark: #c24313; /* hover/pressed state */
+  --color-ordnance-green: #2f4538;     /* secondary accent — map, nav, data */
+  --color-ordnance-green-light: #4a6353;
+  --color-signal-yellow: #f2c14e;      /* sparing use — highlights, warnings */
+
+  /* Semantic */
+  --color-success: #3f7a5c;
+  --color-warning: var(--color-signal-yellow);
+  --color-danger: var(--color-rescue-orange);
+  --color-info: #4472a8;
+
+  /* Text on light */
+  --color-text-primary: var(--color-ink);
+  --color-text-secondary: var(--color-slate);
+  --color-text-inverse: var(--color-mist-soft);
+
+  /* Borders / dividers */
+  --color-border: #dcdfd6;
+  --color-border-dark: #38424f;
+
+  /* Chart series (ordered, colour-blind conscious) */
+  --color-chart-1: var(--color-rescue-orange);
+  --color-chart-2: var(--color-ordnance-green);
+  --color-chart-3: var(--color-signal-yellow);
+  --color-chart-4: #4472a8;
+  --color-chart-5: #8c6a9e;
+  --color-chart-6: var(--color-slate);
+}

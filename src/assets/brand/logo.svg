@@ -1,0 +1,35 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">UK Mountain Rescue Incident Analytics</title>
+
+  <!-- Original mark: a contour-line mountain (nods to OS map data used in the
+       pipeline) with a locator pin as the summit point, set in a hexagonal
+       badge. Deliberately distinct from any real mountain rescue team's
+       cross/shield badge shapes — geometry and composition are original. -->
+
+  <defs>
+    <clipPath id="hex">
+      <polygon points="80,6 148,44 148,116 80,154 12,116 12,44" />
+    </clipPath>
+  </defs>
+
+  <polygon points="80,6 148,44 148,116 80,154 12,116 12,44"
+    fill="#1A2430" stroke="#E8541E" stroke-width="3" />
+
+  <g clip-path="url(#hex)">
+    <!-- contour lines -->
+    <path d="M -10 120 Q 40 95 80 108 Q 120 120 170 95" fill="none" stroke="#4A6353" stroke-width="4" opacity="0.55"/>
+    <path d="M -10 132 Q 40 108 80 120 Q 120 132 170 108" fill="none" stroke="#4A6353" stroke-width="4" opacity="0.4"/>
+    <path d="M -10 144 Q 40 122 80 132 Q 120 144 170 122" fill="none" stroke="#4A6353" stroke-width="4" opacity="0.3"/>
+
+    <!-- mountain silhouette -->
+    <polygon points="30,120 68,58 84,84 104,48 150,120" fill="#2F4538" />
+    <polygon points="84,84 104,48 118,72 96,96" fill="#3a5646" />
+  </g>
+
+  <!-- locator pin marking the summit -->
+  <g transform="translate(104,26)">
+    <path d="M0 0 C10 0 18 8 18 18 C18 30 0 46 0 46 C0 46 -18 30 -18 18 C-18 8 -10 0 0 0 Z"
+      fill="#E8541E" />
+    <circle cx="0" cy="18" r="6.5" fill="#1A2430" />
+  </g>
+</svg>

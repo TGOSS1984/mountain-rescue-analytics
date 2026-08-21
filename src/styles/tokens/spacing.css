@@ -1,0 +1,38 @@
+/*
+  spacing.css
+  Spacing, radius, and layout tokens.
+  4px base unit — keeps every gap, padding, and margin on a consistent grid.
+*/
+
+:root {
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.5rem;    /* 24px */
+  --space-6: 2rem;      /* 32px */
+  --space-8: 3rem;      /* 48px */
+  --space-10: 4rem;     /* 64px */
+  --space-12: 6rem;     /* 96px */
+
+  /* Radius — deliberately small/near-flat, echoes OS map hairlines
+     rather than the soft-rounded default look */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* Layout */
+  --container-max: 1280px;
+  --container-padding: var(--space-5);
+  --header-height: 72px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(26, 36, 48, 0.08);
+  --shadow-md: 0 4px 12px rgba(26, 36, 48, 0.12);
+  --shadow-lg: 0 12px 32px rgba(26, 36, 48, 0.18);
+
+  /* Borders */
+  --border-width: 1px;
+  --border-width-thick: 2px;
+}

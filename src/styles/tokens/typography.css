@@ -1,0 +1,60 @@
+/*
+  typography.css
+  Type system for UK Mountain Rescue Incident Analytics.
+
+  Display: Big Shoulders Display — condensed, signage-like, echoes the
+  stencilled/utilitarian lettering on rescue kit and OS trig points.
+  Body: Inter — quiet and legible, does not compete with the display face.
+  Mono: JetBrains Mono — used specifically for grid references, timestamps,
+  and any raw data values, so "this is a real number" is always visually clear.
+
+  Fonts are loaded via @font-face or a <link> in index.html — see README.
+*/
+
+:root {
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-body: "Inter", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* Type scale — 1.25 ratio, rem-based */
+  --text-xs: 0.75rem;     /* 12px — captions, grid refs */
+  --text-sm: 0.875rem;    /* 14px — secondary body */
+  --text-base: 1rem;      /* 16px — body */
+  --text-lg: 1.25rem;     /* 20px — lead paragraphs */
+  --text-xl: 1.75rem;     /* 28px — section headings */
+  --text-2xl: 2.5rem;     /* 40px — page headings */
+  --text-3xl: 3.75rem;    /* 60px — hero */
+
+  --leading-tight: 1.1;
+  --leading-snug: 1.3;
+  --leading-normal: 1.6;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;   /* used for eyebrow/grid-ref labels */
+}
+
+/* Base element mapping — keep components token-driven, not hardcoded */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+}
+
+body, p, .font-body {
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+}
+
+.font-mono, .data-value, .grid-ref {
+  font-family: var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+}
