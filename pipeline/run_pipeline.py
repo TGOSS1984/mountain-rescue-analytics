@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent / "ingest"))
 sys.path.insert(0, str(Path(__file__).parent / "clean"))
 sys.path.insert(0, str(Path(__file__).parent / "validate"))
 sys.path.insert(0, str(Path(__file__).parent / "geocode"))
+sys.path.insert(0, str(Path(__file__).parent / "warehouse"))
 
 import pandas as pd
 
@@ -34,19 +35,19 @@ def main():
 
     print("=" * 60)
     if not args.skip_scrape:
-        print("STEP 1/4 — scraping team incident logs")
+        print("STEP 1/5 — scraping team incident logs")
         import scrape_team_incidents
         scrape_team_incidents.main()
     else:
-        print("STEP 1/4 — skipped (--skip-scrape), using existing raw data")
+        print("STEP 1/5 — skipped (--skip-scrape), using existing raw data")
 
     print("=" * 60)
-    print("STEP 2/4 — cleaning and standardising")
+    print("STEP 2/5 — cleaning and standardising")
     import clean_incidents
     clean_incidents.main()
 
     print("=" * 60)
-    print("STEP 3/4 — validating against schema")
+    print("STEP 3/5 — validating against schema")
     import schema
     interim_path = Path(__file__).parent / "data" / "interim" / "incidents_cleaned.csv"
     df = pd.read_csv(interim_path)
@@ -60,12 +61,18 @@ def main():
         sys.exit(1)
 
     print("=" * 60)
-    print("STEP 4/4 — geocoding locations")
+    print("STEP 4/5 — geocoding locations")
     import geocode_locations
     geocode_locations.main()
 
     print("=" * 60)
-    print("Pipeline complete. Output: pipeline/data/processed/incidents_geocoded.csv")
+    print("STEP 5/5 — building SQLite warehouse")
+    import build_warehouse
+    build_warehouse.build()
+
+    print("=" * 60)
+    print("Pipeline complete. Output: pipeline/data/processed/incidents.db")
+    print("(also available as CSV: pipeline/data/processed/incidents_geocoded.csv)")
 
 
 if __name__ == "__main__":

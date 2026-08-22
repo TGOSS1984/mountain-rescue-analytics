@@ -1,0 +1,176 @@
+"""
+test_main.py
+
+API test suite. Uses a temporary SQLite database built fresh for each
+test run (not the real pipeline output) so tests are deterministic and
+don't depend on whatever real data happens to be on disk — the pipeline
+already has its own tests for whether the *data* is correct; these
+tests are about whether the *API* correctly serves whatever data is
+in the database.
+
+Run with: pytest tests/
+"""
+
+import sqlite3
+import sys
+from pathlib import Path
+
+import pytest
+from fastapi.testclient import TestClient
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch):
+    """Builds a small, known test database and points the API at it."""
+    db_path = tmp_path / "test_incidents.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL
+        )
+    """)
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        [
+            ("edale", "Kinder Scout", "2026-03-01", "14:30", "walking", "unrecorded",
+             "inferred_from_keywords", "A walker needed assistance.",
+             "https://edalemrt.co.uk/incident/1/", 53.38, -1.87, "matched", "high",
+             None, None, None),
+            ("wasdale", "Scafell Pike", "2026-03-02", None, "walking", "Full Callout",
+             "stated_by_team", "Team deployed.", "https://www.wmrt.org.uk/report-page/",
+             54.45, -3.21, "matched", "high", None, None, None),
+            ("ovmro", "Tryfan", "2026-02-15", None, "climbing", "unrecorded",
+             "inferred_from_keywords", "Climber fell.",
+             "https://ogwen-rescue.org.uk/incident-details/", 53.11, -3.99, "matched", "high",
+             220.0, 1.0, 12.0),
+            ("edale", "Dummy Incident", "2026-03-04", None, "unspecified", "unrecorded",
+             "inferred_from_keywords", "Test entry.", None, None, None, "no_match", None,
+             None, None, None),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_root(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "endpoints" in resp.json()
+
+
+def test_list_incidents_no_filter(client):
+    resp = client.get("/incidents")
+    body = resp.json()
+    assert resp.status_code == 200
+    assert body["total"] == 4
+    assert len(body["incidents"]) == 4
+
+
+def test_list_incidents_filter_by_team(client):
+    resp = client.get("/incidents?team=ovmro")
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["incidents"][0]["location_text"] == "Tryfan"
+
+
+def test_list_incidents_geocoded_only_excludes_no_match(client):
+    resp = client.get("/incidents?geocoded_only=true")
+    body = resp.json()
+    assert body["total"] == 3
+    assert all(i["geocode_status"] == "matched" for i in body["incidents"])
+
+
+def test_list_incidents_date_range_filter(client):
+    resp = client.get("/incidents?date_from=2026-03-01&date_to=2026-03-02")
+    body = resp.json()
+    assert body["total"] == 2
+
+
+def test_ovmro_specific_fields_present(client):
+    resp = client.get("/incidents?team=ovmro")
+    incident = resp.json()["incidents"][0]
+    assert incident["duration_minutes"] == 220.0
+    assert incident["casualties_count"] == 1.0
+    assert incident["team_members_attended"] == 12.0
+
+
+def test_non_ovmro_fields_are_null_not_zero(client):
+    """
+    Regression check for a real design decision made in the pipeline:
+    duration/casualties/team-size are null for sources that don't
+    publish them, not zero — the API must preserve that distinction
+    rather than coercing missing values to 0.
+    """
+    resp = client.get("/incidents?team=edale&limit=1")
+    incident = resp.json()["incidents"][0]
+    assert incident["duration_minutes"] is None
+    assert incident["casualties_count"] is None
+
+
+def test_get_single_incident_by_id(client):
+    resp = client.get("/incidents/1")
+    assert resp.status_code == 200
+    assert resp.json()["location_text"] == "Kinder Scout"
+
+
+def test_get_nonexistent_incident_returns_404(client):
+    resp = client.get("/incidents/9999")
+    assert resp.status_code == 404
+
+
+def test_regions_summary(client):
+    resp = client.get("/regions")
+    body = resp.json()
+    assert len(body) == 3  # edale, wasdale, ovmro
+    edale = next(r for r in body if r["source_team_id"] == "edale")
+    assert edale["region"] == "Peak District"
+    assert edale["incident_count"] == 2
+    assert edale["geocoded_count"] == 1  # Dummy Incident wasn't matched
+
+
+def test_overall_stats(client):
+    resp = client.get("/stats")
+    body = resp.json()
+    assert body["total_incidents"] == 4
+    assert body["geocoded_incidents"] == 3
+    assert body["geocode_match_rate"] == 0.75
+    assert body["date_range_start"] == "2026-02-15"
+    assert body["date_range_end"] == "2026-03-04"
+
+
+def test_monthly_stats(client):
+    resp = client.get("/stats/monthly")
+    body = resp.json()
+    months = {m["month"]: m["incident_count"] for m in body}
+    assert months == {"2026-02": 1, "2026-03": 3}
+
+
+def test_monthly_stats_filtered_by_team(client):
+    resp = client.get("/stats/monthly?team=ovmro")
+    body = resp.json()
+    assert body == [{"month": "2026-02", "incident_count": 1}]
+
+
+def test_pagination_limit_and_offset(client):
+    resp = client.get("/incidents?limit=2&offset=0")
+    first_page = resp.json()
+    resp = client.get("/incidents?limit=2&offset=2")
+    second_page = resp.json()
+
+    assert len(first_page["incidents"]) == 2
+    assert len(second_page["incidents"]) == 2
+    first_ids = {i["source_url"] for i in first_page["incidents"]}
+    second_ids = {i["source_url"] for i in second_page["incidents"]}
+    assert first_ids.isdisjoint(second_ids)
