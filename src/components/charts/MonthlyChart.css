@@ -1,0 +1,33 @@
+.monthly-chart {
+  background: var(--color-ordnance-green);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  color: var(--color-mist-soft);
+}
+
+.monthly-chart__eyebrow {
+  color: var(--color-signal-yellow);
+  margin-bottom: var(--space-2);
+}
+
+.monthly-chart__title {
+  font-size: var(--text-xl);
+  margin: 0 0 var(--space-4);
+}
+
+.monthly-chart__status {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-slate-soft);
+  padding: var(--space-6) 0;
+}
+
+.monthly-chart__tooltip {
+  background: var(--color-ink);
+  color: var(--color-mist-soft);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  border: 1px solid var(--color-border-dark);
+}
