@@ -31,7 +31,8 @@ import time
 from pathlib import Path
 
 import requests
-from tenacity import retry, stop_after_attempt, wait_exponential
+from bs4 import BeautifulSoup
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
 HEADERS = {
@@ -46,19 +47,61 @@ ENTRY_HEADER_RE = re.compile(
 )
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=20))
+def _is_retryable(exception):
+    if isinstance(exception, requests.HTTPError):
+        status = exception.response.status_code if exception.response is not None else None
+        return status is not None and status >= 500
+    return isinstance(exception, (requests.ConnectionError, requests.Timeout))
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=20),
+    retry=retry_if_exception(_is_retryable),
+    reraise=True,
+)
 def _get(url):
     resp = requests.get(url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
     return resp
 
 
+def _extract_page_text(html):
+    """
+    Converts the page's raw HTML into clean plain text, one logical block
+    per line — this is what _extract_entries() actually expects.
+
+    IMPORTANT: an earlier version of this file passed resp.text (raw
+    HTML) straight into _extract_entries(), which was written and tested
+    against pre-extracted plain text only. Real HTML wraps each incident
+    header in tags rather than giving it its own bare text line, so the
+    naive line-split silently missed most entries — on a real run this
+    pulled 32 incidents instead of the ~115+ actually on the page. This
+    function is the fix: strip HTML properly with BeautifulSoup first,
+    with a text separator that preserves one block per line, before any
+    regex sees it.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    # Prefer a scoped main-content region if the theme provides one, to
+    # avoid picking up nav/sidebar text; fall back to the whole page.
+    content = soup.select_one("main") or soup.select_one(".entry-content") or soup
+    text = content.get_text("\n", strip=True)
+
+    # The live page uses &nbsp; between "Full"/"Limited" and "Callout"
+    # (e.g. "Full\xa0Callout"), which is invisible in a browser but is a
+    # different character to a regular space — ENTRY_HEADER_RE requires
+    # a literal space there, so without this normalisation 83 of 115
+    # real incident headers on a live run failed to match and got
+    # silently absorbed into whichever entry came before them instead of
+    # being recognised as their own incidents. Confirmed against the
+    # live page's actual extracted text, not assumed.
+    text = text.replace("\xa0", " ")
+
+    return text
+
+
 def _extract_entries(page_text):
-    """
-    Splits the report page's plain text into individual incident blocks.
-    Expects page_text already stripped of nav/header/footer chrome —
-    see note in scrape() about isolating the main content region first.
-    """
+    """Splits already-cleaned plain text into individual incident blocks."""
     lines = [l.strip() for l in page_text.split("\n") if l.strip()]
     entries = []
     current = None
@@ -86,18 +129,9 @@ def _extract_entries(page_text):
 
 
 def scrape():
-    """
-    NOTE: this parses the already-fetched page text (see main() below).
-    A production run should isolate the main content region (e.g. the
-    <main> or article container) before splitting into lines, to avoid
-    picking up nav links or footer text that happen to start with a
-    digit and a period. The regex is specific enough (requires the
-    " - Alert/Limited Callout/Full Callout - " marker) that this is a
-    low-risk edge case, but worth a spot-check against the live page
-    rather than assuming.
-    """
     resp = _get("https://www.wmrt.org.uk/report-page/")
-    entries = _extract_entries(resp.text)
+    page_text = _extract_page_text(resp.text)
+    entries = _extract_entries(page_text)
 
     incidents = []
     for e in entries:
@@ -127,7 +161,7 @@ def main():
     print(f"[wasdale] extracted {len(incidents)} incidents")
 
     out_path = RAW_DIR / "wasdale_incidents_raw.json"
-    out_path.write_text(json.dumps(incidents, indent=2, ensure_ascii=False))
+    out_path.write_text(json.dumps(incidents, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"[wasdale] wrote {out_path}")
 
 

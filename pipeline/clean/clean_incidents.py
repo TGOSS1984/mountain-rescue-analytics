@@ -23,6 +23,7 @@ worth being upfront about what's inference vs. what's stated directly:
 import json
 import re
 from pathlib import Path
+import html
 
 import pandas as pd
 from dateutil import parser as dateparser
@@ -134,12 +135,24 @@ def classify(text, keyword_map, default="unspecified"):
 
 
 def clean_team_file(raw_path):
-    raw_incidents = json.loads(raw_path.read_text())
+    raw_incidents = json.loads(raw_path.read_text(encoding="utf-8"))
     rows = []
 
     for item in raw_incidents:
         full_text = item.get("content_text") or item.get("content_html") or ""
         title = item.get("title_raw", "").strip()
+
+        # WordPress's REST API returns title/content with raw HTML
+        # entities un-decoded (e.g. "Lady Canning&#8217;s" instead of
+        # "Lady Canning's") — the HTML-scrape fallback path already got
+        # this for free via BeautifulSoup's get_text(), but REST-sourced
+        # rows (i.e. most of Edale) never did. Found by spotting it in
+        # real output: several location names were silently hurting
+        # their own geocoding match rate by querying Nominatim for
+        # "Gardom&#8217;s edge" instead of "Gardom's edge". Unescaping
+        # once here, at the source, rather than patching it downstream.
+        full_text = html.unescape(full_text)
+        title = html.unescape(title)
         stated_callout_type = item.get("callout_type_stated")
         is_ovmro = item["source_team_id"] == "ovmro"
 
@@ -147,7 +160,7 @@ def clean_team_file(raw_path):
             "source_team_id": item["source_team_id"],
             "source_method": item["source_method"],
             "incident_id": parse_incident_number(full_text) or parse_incident_number(title),
-            "location_text": item.get("title_raw") if not stated_callout_type and not is_ovmro else (
+            "location_text": title if not stated_callout_type and not is_ovmro else (
                 item.get("location_text_stated") if is_ovmro else _wasdale_location(title)
             ),
             # OVMRO gives a clean pre-parsed date directly; other sources
@@ -208,7 +221,7 @@ def main():
     combined = combined.drop_duplicates(subset=["source_team_id", "incident_id", "date"])
 
     out_path = INTERIM_DIR / "incidents_cleaned.csv"
-    combined.to_csv(out_path, index=False)
+    combined.to_csv(out_path, index=False, encoding="utf-8")
     print(f"wrote {len(combined)} cleaned rows to {out_path}")
 
 

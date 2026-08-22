@@ -98,7 +98,7 @@ def test_wasdale_stated_outcome_passed_through_not_reinferred():
 
     with tempfile.TemporaryDirectory() as tmp:
         raw_path = Path(tmp) / "wasdale_incidents_raw.json"
-        raw_path.write_text(json.dumps(raw))
+        raw_path.write_text(json.dumps(raw), encoding="utf-8")
         df = clean_team_file(raw_path)
 
     assert df.iloc[0]["outcome"] == "Limited Callout"
@@ -152,7 +152,7 @@ def test_ovmro_row_uses_stated_fields_not_regex_extraction():
 
     with tempfile.TemporaryDirectory() as tmp:
         raw_path = Path(tmp) / "ovmro_incidents_raw.json"
-        raw_path.write_text(json.dumps(raw))
+        raw_path.write_text(json.dumps(raw), encoding="utf-8")
         df = clean_team_file(raw_path)
 
     row = df.iloc[0]
@@ -162,3 +162,31 @@ def test_ovmro_row_uses_stated_fields_not_regex_extraction():
     assert row["duration_minutes"] == 368
     assert row["casualties_count"] == 1
     assert row["team_members_attended"] == 19
+
+
+def test_wasdale_nbsp_between_callout_words_does_not_break_header_match():
+    """
+    Regression test for a real bug found on the live site: Wasdale's
+    HTML uses &nbsp; (rendered as \xa0 once extracted) between "Full"/
+    "Limited" and "Callout" rather than a regular space. This is
+    invisible in a browser but is a different character to what the
+    header regex expected, and on a live run it caused 83 of 115 real
+    incidents to be silently absorbed into whichever entry came before
+    them instead of being recognised as their own rows. Fixed in
+    _extract_page_text() by normalising \xa0 to a regular space before
+    any regex sees the text — this test uses the literal string from
+    the live page's actual extracted output, not a synthetic sample.
+    """
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ingest"))
+    from scrape_wasdale import _extract_page_text, ENTRY_HEADER_RE
+
+    fake_html = (
+        "<main><p>2. Piers Gill, Scafell Pike - Full\u00a0Callout - "
+        "13:06 Tue 6th Jan 2026</p><p>Narrative.</p></main>"
+    )
+    text = _extract_page_text(fake_html)
+    header_line = text.split("\n")[0]
+
+    assert "\u00a0" not in text
+    assert ENTRY_HEADER_RE.match(header_line) is not None

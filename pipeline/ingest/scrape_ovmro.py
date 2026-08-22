@@ -35,7 +35,8 @@ import re
 from pathlib import Path
 
 import requests
-from tenacity import retry, stop_after_attempt, wait_exponential
+from bs4 import BeautifulSoup
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
 HEADERS = {
@@ -43,53 +44,76 @@ HEADERS = {
                   "(personal, non-commercial data analysis; contact via GitHub)"
 }
 
+# The leading incident number is often wrapped in <strong>/<b> in the
+# source HTML, which BeautifulSoup's get_text() renders as plain digits
+# with no markdown-style asterisks — so those are optional here, not
+# required. An earlier version of this file required literal "**" and
+# only ever matched hand-written markdown-style test text, not real
+# extracted HTML text, which is why a live run found 0 incidents despite
+# the page genuinely having 130+.
 ENTRY_RE = re.compile(
-    r"\*\*(\d+)\*\*\s+(.+?)\s+(\d{2}/\d{2}/\d{4})\s+Duration:\s+(\d{2}:\d{2})"
+    r"^\**\s*(\d+)\s*\**\s+(.+?)\s+(\d{2}/\d{2}/\d{4})\s+Duration:\s+(\d{2}:\d{2})"
     r"(?:\s+(\d+)\s+persons?)?\s+(\d+)\s+members?\s+attended"
 )
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=20))
+def _is_retryable(exception):
+    if isinstance(exception, requests.HTTPError):
+        status = exception.response.status_code if exception.response is not None else None
+        return status is not None and status >= 500
+    return isinstance(exception, (requests.ConnectionError, requests.Timeout))
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=20),
+    retry=retry_if_exception(_is_retryable),
+    reraise=True,
+)
 def _get(url):
     resp = requests.get(url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
     return resp
 
 
-def _parse_table(page_markdown_or_html):
+def _parse_table(html):
     """
-    Splits the details table into rows. This was developed against the
-    page's rendered markdown-style table (pipe-delimited Details |
-    Description columns); if fetching raw HTML instead, parse the
-    <table> rows with BeautifulSoup and pass each row's two cell texts
-    through the same ENTRY_RE against the first cell — the regex itself
-    doesn't care which route got you the text.
+    Parses OVMRO's incident details table directly from real HTML using
+    BeautifulSoup — walks every <table>, and within each, every <tr>,
+    pulling the text of the first two <td> cells (Details, Description).
+
+    This replaced an earlier version that looked for a markdown-style
+    "| Details | Description |" pipe-delimited row, which only ever
+    existed in a hand-written test fixture, never in what requests.get()
+    actually returns from the live site — that mismatch is why the first
+    real run extracted 0 incidents from a page that has 130+.
     """
+    soup = BeautifulSoup(html, "html.parser")
     rows = []
-    for line in page_markdown_or_html.split("\n"):
-        if "**" not in line or "|" not in line:
-            continue
-        cells = [c.strip() for c in line.split("|")]
-        # table rows here look like: | Details... | Description... |
-        cells = [c for c in cells if c]
-        if len(cells) < 2:
-            continue
 
-        details_cell, description_cell = cells[0], cells[1]
-        match = ENTRY_RE.search(details_cell)
-        if not match:
-            continue
+    for table in soup.find_all("table"):
+        for tr in table.find_all("tr"):
+            cells = tr.find_all(["td", "th"])
+            if len(cells) < 2:
+                continue
 
-        num, location, date_raw, duration, casualties, members = match.groups()
-        rows.append({
-            "incident_number": num,
-            "location_text": location.strip(),
-            "date_raw": date_raw,          # DD/MM/YYYY
-            "duration_raw": duration,      # HH:MM elapsed, not a clock time
-            "casualties_count": casualties,
-            "team_members_attended": members,
-            "narrative": description_cell.strip(),
-        })
+            details_text = cells[0].get_text(" ", strip=True)
+            description_text = cells[1].get_text(" ", strip=True)
+
+            match = ENTRY_RE.search(details_text)
+            if not match:
+                continue  # e.g. the header row ("Details | Description"), skipped naturally
+
+            num, location, date_raw, duration, casualties, members = match.groups()
+            rows.append({
+                "incident_number": num,
+                "location_text": location.strip(),
+                "date_raw": date_raw,
+                "duration_raw": duration,
+                "casualties_count": casualties,
+                "team_members_attended": members,
+                "narrative": description_text.strip(),
+            })
 
     return rows
 
@@ -124,7 +148,7 @@ def main():
         })
 
     out_path = RAW_DIR / "ovmro_incidents_raw.json"
-    out_path.write_text(json.dumps(incidents, indent=2, ensure_ascii=False))
+    out_path.write_text(json.dumps(incidents, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"[ovmro] wrote {out_path}")
 
 

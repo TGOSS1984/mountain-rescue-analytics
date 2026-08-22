@@ -30,7 +30,7 @@ from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception, RetryError
 
 from sources import SOURCES
 
@@ -42,7 +42,30 @@ HEADERS = {
 REQUEST_DELAY_SECONDS = 2  # be a polite scraper — these are volunteer-run charity sites
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=20))
+def _is_retryable(exception):
+    """
+    Only retry errors that a retry can plausibly fix: network hiccups,
+    timeouts, and 5xx server errors. A 4xx response — most importantly a
+    400 on a page number past the end of a paginated REST API, which is
+    WordPress's normal way of saying "you've reached the last page," not
+    a failure — should fail fast on the first attempt, not burn ~20+
+    seconds of exponential backoff retrying something that will never
+    succeed no matter how many times it's asked.
+    """
+    if isinstance(exception, requests.HTTPError):
+        status = exception.response.status_code if exception.response is not None else None
+        return status is not None and status >= 500
+    return isinstance(exception, (requests.ConnectionError, requests.Timeout))
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=20),
+    retry=retry_if_exception(_is_retryable),
+    reraise=True,  # re-raise the ORIGINAL exception (e.g. HTTPError) rather than
+                   # wrapping it in tenacity's own RetryError — callers catch
+                   # requests.HTTPError directly and need to actually see it.
+)
 def _get(url):
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
@@ -187,7 +210,7 @@ def main():
 
         incidents = scrape_source(source)
         out_path = RAW_DIR / f"{source['team_id']}_incidents_raw.json"
-        out_path.write_text(json.dumps(incidents, indent=2, ensure_ascii=False))
+        out_path.write_text(json.dumps(incidents, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"[{source['team_id']}] wrote {out_path}")
 
 
