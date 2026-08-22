@@ -29,7 +29,11 @@ ALLOWED_OUTCOMES = {
 incidents_schema = pa.DataFrameSchema(
     {
         "source_team_id": Column(str, nullable=False),
-        "source_method": Column(str, Check.isin(["rest_api", "html_scrape"])),
+        "source_method": Column(str, Check.isin([
+            "rest_api", "html_scrape",
+            "html_scrape_single_page",      # Wasdale
+            "html_scrape_rendered_table",   # OVMRO
+        ])),
         "incident_id": Column(str, nullable=True),  # nullable — see clean_incidents.py notes
         "location_text": Column(str, nullable=False),
         "date": Column(str, nullable=True, checks=Check.str_matches(r"^\d{4}-\d{2}-\d{2}$"), coerce=True),
@@ -39,6 +43,12 @@ incidents_schema = pa.DataFrameSchema(
         "outcome_source": Column(str, Check.isin(["stated_by_team", "inferred_from_keywords"])),
         "narrative_raw": Column(str, nullable=True),
         "source_url": Column(str, nullable=True),
+        # OVMRO-only fields — null for every other source (they simply
+        # don't publish this data), not zero-filled, so "not provided"
+        # stays distinguishable from "recorded as zero."
+        "duration_minutes": Column(float, nullable=True, checks=Check.ge(0)),
+        "casualties_count": Column(float, nullable=True, checks=Check.ge(0)),
+        "team_members_attended": Column(float, nullable=True, checks=Check.ge(0)),
     },
     strict=False,   # allow extra columns added later (e.g. geocoded lat/lon) without breaking this check
     coerce=True,

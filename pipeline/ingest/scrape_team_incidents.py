@@ -165,8 +165,8 @@ def scrape_source(source):
 def main():
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     for source in SOURCES:
-        if source["team_id"] in ("buxton", "ovmro"):
-            print(f"[{source['team_id']}] skipping — {source.get('parser', 'archive structure not yet confirmed')}, "
+        if source["team_id"] == "buxton":
+            print(f"[{source['team_id']}] skipping — archive structure not yet confirmed, "
                   f"see docs/data-dictionary.md")
             continue
 
@@ -176,6 +176,13 @@ def main():
             # generic WordPress-shaped logic above.
             import scrape_wasdale
             scrape_wasdale.main()
+            continue
+
+        if source["team_id"] == "ovmro":
+            # Server-rendered details table, not the JS-loaded map page —
+            # also handled by its own scraper. See scrape_ovmro.py.
+            import scrape_ovmro
+            scrape_ovmro.main()
             continue
 
         incidents = scrape_source(source)

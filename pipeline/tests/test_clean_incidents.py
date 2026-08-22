@@ -104,3 +104,61 @@ def test_wasdale_stated_outcome_passed_through_not_reinferred():
     assert df.iloc[0]["outcome"] == "Limited Callout"
     assert df.iloc[0]["outcome_source"] == "stated_by_team"
     assert df.iloc[0]["location_text"] == "Slight Side, Scafell"
+
+
+def test_parse_ddmmyyyy():
+    from clean_incidents import parse_ddmmyyyy
+    assert parse_ddmmyyyy("16/08/2026") == "2026-08-16"
+    assert parse_ddmmyyyy("not a date") is None
+
+
+def test_duration_to_minutes():
+    from clean_incidents import duration_to_minutes
+    assert duration_to_minutes("03:40") == 220
+    assert duration_to_minutes("12:00") == 720
+    assert duration_to_minutes(None) is None
+
+
+def test_ovmro_row_uses_stated_fields_not_regex_extraction():
+    """
+    OVMRO's scraper pre-parses date/location/duration/casualties directly
+    from the source table, so cleaning should use those fields as-is
+    rather than re-extracting them from narrative text the way it has to
+    for Edale. This is a real row from the live site, included verbatim
+    as a regression fixture.
+    """
+    import json
+    from pathlib import Path
+    import tempfile
+    from clean_incidents import clean_team_file
+
+    raw = [{
+        "source_team_id": "ovmro",
+        "source_method": "html_scrape_rendered_table",
+        "title_raw": "12 Llyn Crafant, Mannod Quarry",
+        "content_text": (
+            "A pair of climbers were drytooling at a quarry near Crafnant when one of "
+            "them felt unwell and then collapsed. Despite attempts to resuscitate him, "
+            "the casualty sadly died at the scene and was later evacuated from the "
+            "quarry by the team."
+        ),
+        "location_text_stated": "Llyn Crafant, Mannod Quarry",
+        "date_raw_ddmmyyyy": "03/02/2026",
+        "duration_raw": "06:08",
+        "casualties_count": "1",
+        "team_members_attended": "19",
+        "link": "https://ogwen-rescue.org.uk/incident-details/",
+    }]
+
+    with tempfile.TemporaryDirectory() as tmp:
+        raw_path = Path(tmp) / "ovmro_incidents_raw.json"
+        raw_path.write_text(json.dumps(raw))
+        df = clean_team_file(raw_path)
+
+    row = df.iloc[0]
+    assert row["location_text"] == "Llyn Crafant, Mannod Quarry"
+    assert row["date"] == "2026-02-03"
+    assert row["time"] is None
+    assert row["duration_minutes"] == 368
+    assert row["casualties_count"] == 1
+    assert row["team_members_attended"] == 19

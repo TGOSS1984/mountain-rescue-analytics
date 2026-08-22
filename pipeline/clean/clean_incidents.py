@@ -63,6 +63,31 @@ TIME_RE_MILITARY = re.compile(r"\b([01]\d|2[0-3])([0-5]\d)\s*(?:hrs|hours)\b", r
 TIME_RE_COLON = re.compile(r"\b([01]?\d|2[0-3]):([0-5]\d)\s*(?:hrs|hours)?\b", re.IGNORECASE)
 
 
+DATE_DDMMYYYY_RE = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+
+
+def parse_ddmmyyyy(date_str):
+    """OVMRO's dates come pre-formatted as DD/MM/YYYY rather than needing
+    extraction from free text — this just normalises to ISO, no regex
+    hunting required."""
+    m = DATE_DDMMYYYY_RE.match((date_str or "").strip())
+    if not m:
+        return None
+    day, month, year = m.groups()
+    return f"{year}-{month}-{day}"
+
+
+def duration_to_minutes(duration_str):
+    """Converts OVMRO's 'HH:MM' operation duration into total minutes.
+    Note this is elapsed time, not a clock time — '12:00' means the
+    operation ran 12 hours, not that it happened at noon."""
+    m = re.match(r"^(\d{2}):(\d{2})$", (duration_str or "").strip())
+    if not m:
+        return None
+    hours, minutes = m.groups()
+    return int(hours) * 60 + int(minutes)
+
+
 def _first_match(pattern, text):
     m = pattern.search(text or "")
     return m.group(1) if m else None
@@ -115,29 +140,39 @@ def clean_team_file(raw_path):
     for item in raw_incidents:
         full_text = item.get("content_text") or item.get("content_html") or ""
         title = item.get("title_raw", "").strip()
-
-        # Wasdale's scraper states callout severity directly in the source
-        # (Alert / Limited Callout / Full Callout) rather than us having to
-        # infer it from keywords — pass it through as-is when present, and
-        # fall back to the keyword classifier for teams that don't provide
-        # this (e.g. Edale). `outcome_source` records which happened, so
-        # the distinction between "stated by the team" and "inferred here"
-        # stays visible in the output rather than being silently merged.
         stated_callout_type = item.get("callout_type_stated")
+        is_ovmro = item["source_team_id"] == "ovmro"
 
-        rows.append({
+        row = {
             "source_team_id": item["source_team_id"],
             "source_method": item["source_method"],
             "incident_id": parse_incident_number(full_text) or parse_incident_number(title),
-            "location_text": item.get("title_raw") if not stated_callout_type else _wasdale_location(title),
-            "date": parse_date(full_text),
-            "time": parse_time(full_text),
+            "location_text": item.get("title_raw") if not stated_callout_type and not is_ovmro else (
+                item.get("location_text_stated") if is_ovmro else _wasdale_location(title)
+            ),
+            # OVMRO gives a clean pre-parsed date directly; other sources
+            # need it extracted from free text.
+            "date": parse_ddmmyyyy(item.get("date_raw_ddmmyyyy")) if is_ovmro else parse_date(full_text),
+            # OVMRO's source data is an elapsed *duration*, not a clock-in
+            # time, so there's no meaningful "time" value to set here —
+            # left null rather than misusing duration as a timestamp.
+            "time": None if is_ovmro else parse_time(full_text),
             "activity_type": classify(full_text, ACTIVITY_KEYWORDS),
             "outcome": stated_callout_type if stated_callout_type else classify(full_text, OUTCOME_KEYWORDS, default="unrecorded"),
             "outcome_source": "stated_by_team" if stated_callout_type else "inferred_from_keywords",
             "narrative_raw": full_text.strip(),
             "source_url": item.get("link"),
-        })
+            # OVMRO-specific fields — null for every other source, which
+            # is honest: Edale and Wasdale simply don't publish this.
+            "duration_minutes": duration_to_minutes(item.get("duration_raw")) if is_ovmro else None,
+            "casualties_count": (
+                int(item["casualties_count"]) if is_ovmro and item.get("casualties_count") else None
+            ),
+            "team_members_attended": (
+                int(item["team_members_attended"]) if is_ovmro and item.get("team_members_attended") else None
+            ),
+        }
+        rows.append(row)
 
     return pd.DataFrame(rows)
 

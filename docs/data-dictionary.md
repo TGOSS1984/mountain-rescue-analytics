@@ -8,19 +8,19 @@ more useful than the code itself.
 
 ## Where the data comes from
 
-**Confirmed and wired in:**
+**All three confirmed and wired in:**
 
 - **Edale Mountain Rescue Team** (Peak District) — `edalemrt.co.uk/incident/`. Numbered, dated posts with a location title and narrative. Paginated archive + individual detail pages.
 - **Wasdale Mountain Rescue Team** (Lake District) — `wmrt.org.uk/report-page/`. The whole year published as one page, numbered entries with an explicit stated callout type (`Alert` / `Limited Callout` / `Full Callout`) right in the source — a real severity signal, not one I had to infer.
+- **Ogwen Valley Mountain Rescue Organisation** (Snowdonia/Eryri) — `ogwen-rescue.org.uk/incident-details/`. OVMRO actually publish two views of the same data: an incident *map* that loads via client-side JavaScript (not fetchable with a plain request), and a *details* page that renders the same data as a plain server-side table — which is what the scraper uses. It's the richest of the three sources: on top of location and narrative, every row states an operation duration, a casualty count, and the number of team members who attended, none of which the other two teams publish. Worth remembering when the pattern "the map version is JS-loaded" comes up elsewhere — check for a details/table view before concluding a source needs a browser to scrape.
 
 **Identified but not yet wired in:**
 
-- **Ogwen Valley Mountain Rescue Organisation** (Snowdonia/Eryri) — `ogwen-rescue.org.uk/incident-maps/`. This looks like the best source of the three: over 130 incidents, and the page structure (date/location/summary table plus an actual map) suggests they may already hold coordinates, not just place names. The catch is that the table loads via client-side JavaScript rather than being present in the page's initial HTML — the data comes from a backend request the page's own JS makes, which I haven't identified yet from a static fetch. Finding it just means opening the page in a browser, watching the Network tab for the request that returns the incident data, and pointing the scraper at that URL directly instead of the HTML. See "Adding a new source" below.
 - **Buxton Mountain Rescue Team** (Peak District) — has a `/call-outs` page; CMS platform and structure not yet confirmed.
 
 I chose team-level incident logs over Mountain Rescue England & Wales' national statistics because MREW's published data is annual aggregate PDFs (counts by category and region, going back to 1980) — good for national trend context, but not row-level records with locations, which is what this project needed in order to map and geocode individual incidents.
 
-Bringing in Wasdale (Lake District) and, once its data endpoint is found, Ogwen Valley (Snowdonia) alongside Edale (Peak District) is what actually makes this a national picture rather than a single-region case study — three of England and Wales' busiest mountain areas, each with a genuinely different terrain and weather profile.
+Having Edale (Peak District), Wasdale (Lake District), and OVMRO (Snowdonia) together is what makes this a genuinely national picture rather than a single-region case study — three of England and Wales' busiest mountain areas, each with a different terrain and weather profile, and — usefully — three different site structures to scrape, which is a more honest test of the pipeline than one format repeated three times.
 
 ## Fields and how they're derived
 
@@ -31,8 +31,11 @@ Bringing in Wasdale (Lake District) and, once its data endpoint is found, Ogwen 
 | `time` | Parsed from a timestamp in the opening line (either "1748hrs" or "13:37" style) | High. Earlier version of this regex mistakenly matched the year (e.g. "2026" as 20:26) — caught by the test suite, fixed, and kept as a regression test so it can't silently reappear |
 | `location_text` | The incident's title, as published | This is a name, not a coordinate — see geocoding below |
 | `activity_type` | Inferred from keywords in the narrative (walker, climber, cyclist, etc.) | **Judgement call.** This is a simple rule-based classifier, not a field the source provides directly. It will misclassify ambiguous cases — e.g. if a walker witnesses a climber's fall, the keyword "climber" wins even though a walker reported it. Treat this column as a reasonable first pass, not ground truth |
-| `outcome` | Team-stated callout type (Wasdale) where available, otherwise inferred from narrative keywords (Edale) | Wasdale: high — this is a direct source field. Edale: **judgement call**, see above |
+| `outcome` | Team-stated callout type (Wasdale) where available, otherwise inferred from narrative keywords (Edale, OVMRO) | Wasdale: high — this is a direct source field. Edale/OVMRO: **judgement call**, see above |
 | `outcome_source` | `"stated_by_team"` or `"inferred_from_keywords"` | Records which of the two applies for that row, so the two aren't silently blended |
+| `duration_minutes` | OVMRO only — total operation duration, stated directly by the team | High confidence, direct source field. Null for Edale/Wasdale, who don't publish this |
+| `casualties_count` | OVMRO only — number of casualties, where stated | Null (not zero) where OVMRO didn't state a count — "not stated" and "zero" are kept distinct |
+| `team_members_attended` | OVMRO only — number of team members deployed | Direct source field |
 | `lat` / `lon` | Geocoded from `location_text` via Nominatim (OpenStreetMap), biased to a Peak District bounding box | Varies — see `geocode_confidence` |
 | `geocode_confidence` | "high" if Nominatim's match type is a natural feature (peak, hill, water); "low" otherwise | Nominatim doesn't return a numeric confidence score, so this is a derived proxy, not a native field |
 | `geocode_status` | "matched", "no_match", or "skipped" (empty location text) | — |

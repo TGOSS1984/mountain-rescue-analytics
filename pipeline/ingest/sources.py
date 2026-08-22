@@ -59,29 +59,18 @@ SOURCES = [
         "team_name": "Ogwen Valley Mountain Rescue Organisation",
         "region": "Snowdonia (Eryri)",
         "base_url": "https://ogwen-rescue.org.uk",
-        # OVMRO publish an "Incident Map" with 130+ points (date, location,
-        # summary) but the table itself is loaded client-side via JS — the
-        # static page just shows "Loading N data points…". The real data
-        # comes from a backend endpoint the page's JS calls, which hasn't
-        # been identified yet from static fetches alone. Likely either a
-        # WordPress REST endpoint or a custom AJAX handler
-        # (wp-admin/admin-ajax.php with an action parameter is common for
-        # this kind of "loading…" pattern on WP sites).
-        #
-        # NOT wired into the scraper yet — see docs/data-dictionary.md,
-        # "Adding a new source", step 2a: open browser dev tools on
-        # /incident-maps/, watch the Network tab for the XHR/fetch request
-        # that returns the incident JSON, and drop that URL in here as
-        # `rest_api_candidate` (or a new `ajax_endpoint` key if it needs
-        # a POST body). This is genuinely the best-looking source of the
-        # three once that endpoint is found — it may already include
-        # coordinates, which would remove the need to geocode Ogwen rows
-        # at all.
-        "archive_url": "https://ogwen-rescue.org.uk/incident-maps/",
+        # The incident MAP page loads its data via client-side JS and
+        # isn't fetchable directly (see scrape_ovmro.py docstring) — but
+        # OVMRO also publish a separate "Incident Details" page with the
+        # same data server-rendered as a plain table. That's what's
+        # actually used, and it's richer than the map data anyway:
+        # duration, casualty count, and team members attended per
+        # incident, none of which Edale or Wasdale provide.
+        "archive_url": "https://ogwen-rescue.org.uk/incident-details/",
         "archive_url_template": None,
         "rest_api_candidate": None,
         "post_link_pattern": None,
-        "parser": "not_yet_implemented",
+        "parser": "ovmro_details_table",
     },
     # Add further teams here once their archive structure has been checked
     # by hand — see docs/data-dictionary.md "Adding a new source" section.
