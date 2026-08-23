@@ -66,6 +66,14 @@ export function getDaylightStats() {
   return request("/stats/daylight");
 }
 
+export function getDayOfWeekStats() {
+  return request("/stats/day-of-week");
+}
+
+export function getBankHolidayStats() {
+  return request("/stats/bank-holidays");
+}
+
 export function getRegions() {
   return request("/regions");
 }
