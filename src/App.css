@@ -1,5 +1,23 @@
+/*
+  Vertical spacing between sections. Uses margin-block specifically —
+  not the `margin` shorthand — because .app__section shares an element
+  with .container (className="container app__section"), and .container
+  sets margin-inline/padding-inline for its own purposes (horizontal
+  centring + gutters). Two earlier attempts (padding shorthand, then
+  margin shorthand, then a flex-gap on <main>) each broke something:
+  the first two silently collapsed to zero because shorthands don't
+  merge between rules — whichever wins the cascade replaces the whole
+  property, four sides at once. The flex-gap attempt avoided that
+  collision but broke .container's own margin-inline:auto centring,
+  since flex's stretch sizing and auto margins interact in a way that
+  made every card shrink to fit its content instead of filling the
+  row. margin-block/padding-inline are different properties entirely —
+  vertical and horizontal spacing literally can't collide, and normal
+  block layout (no flex) is restored, so .container centres correctly
+  again.
+*/
 .app__section {
-  padding: var(--space-8) 0;
+  margin-block: var(--space-8) 0;
 }
 
 .app__insights-grid {
@@ -10,7 +28,7 @@
 }
 
 .app__section--last {
-  padding-bottom: var(--space-10);
+  margin-block-end: var(--space-10);
 }
 
 .app__list-eyebrow {

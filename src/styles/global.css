@@ -42,8 +42,8 @@ button {
 
 .container {
   max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--container-padding);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
 }
 
 .eyebrow {
