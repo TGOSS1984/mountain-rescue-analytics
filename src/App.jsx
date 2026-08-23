@@ -10,6 +10,8 @@ import TimeOfDayChart from "./components/charts/TimeOfDayChart.jsx";
 import ActivityChart from "./components/charts/ActivityChart.jsx";
 import ElevationChart from "./components/charts/ElevationChart.jsx";
 import DaylightChart from "./components/charts/DaylightChart.jsx";
+import DayOfWeekChart from "./components/charts/DayOfWeekChart.jsx";
+import BankHolidayChart from "./components/charts/BankHolidayChart.jsx";
 import NotableStats from "./components/regions/NotableStats.jsx";
 import TopLocations from "./components/regions/TopLocations.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
@@ -18,7 +20,7 @@ import IncidentCard from "./components/incidents/IncidentCard.jsx";
 import {
   getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getTimeOfDayStats,
   getActivityBreakdown, getNotableStats, getTopLocations, getElevationStats,
-  getDaylightStats, getRegions, getIncidents,
+  getDaylightStats, getDayOfWeekStats, getBankHolidayStats, getRegions, getIncidents,
 } from "./api/client.js";
 import "./App.css";
 
@@ -92,6 +94,24 @@ export default function App() {
       .then(setDaylight)
       .catch(() => setDaylight(null))
       .finally(() => setDaylightLoading(false));
+  }, []);
+
+  const [dayOfWeek, setDayOfWeek] = useState(null);
+  const [dayOfWeekLoading, setDayOfWeekLoading] = useState(true);
+  useEffect(() => {
+    getDayOfWeekStats()
+      .then(setDayOfWeek)
+      .catch(() => setDayOfWeek(null))
+      .finally(() => setDayOfWeekLoading(false));
+  }, []);
+
+  const [bankHoliday, setBankHoliday] = useState(null);
+  const [bankHolidayLoading, setBankHolidayLoading] = useState(true);
+  useEffect(() => {
+    getBankHolidayStats()
+      .then(setBankHoliday)
+      .catch(() => setBankHoliday(null))
+      .finally(() => setBankHolidayLoading(false));
   }, []);
 
   // Notable stats are inherently Snowdonia-specific (OVMRO is the only
@@ -239,6 +259,11 @@ export default function App() {
         <div className="container app__section app__insights-grid">
           <ElevationChart data={elevation} loading={elevationLoading} />
           <DaylightChart data={daylight} loading={daylightLoading} />
+        </div>
+
+        <div className="container app__section app__insights-grid">
+          <DayOfWeekChart data={dayOfWeek} loading={dayOfWeekLoading} />
+          <BankHolidayChart data={bankHoliday} loading={bankHolidayLoading} />
         </div>
 
         <div className="container app__section">
