@@ -18,6 +18,7 @@ from models import (
     Incident, IncidentList, OverallStats, RegionSummary, MonthlySummary,
     YearlySummary, WeatherStats, WeatherBreakdown, TimeOfDayStats, TimeOfDayBucket,
     ActivityBreakdownRow, NotableStats, NotableRecord, TopLocation,
+    ElevationStats, ElevationBand, RegionElevation, DaylightStats,
 )
 
 app = FastAPI(
@@ -520,3 +521,96 @@ def top_locations(limit: int = Query(10, ge=1, le=50), team: Optional[str] = Que
         )
         for r in rows
     ]
+
+
+ELEVATION_BANDS = [
+    (0, "0-200m"), (200, "200-400m"), (400, "400-600m"),
+    (600, "600-800m"), (800, "800-1000m"), (1000, "1000m+"),
+]
+
+
+def _band_for(elevation):
+    """Returns (band_min_m, band_label) for the highest band whose
+    threshold the elevation meets or exceeds."""
+    result_min, result_label = ELEVATION_BANDS[0]
+    for band_min, label in ELEVATION_BANDS:
+        if elevation >= band_min:
+            result_min, result_label = band_min, label
+    return result_min, result_label
+
+
+@app.get("/stats/elevation", response_model=ElevationStats)
+def elevation_stats():
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT elevation_m FROM incidents WHERE elevation_m IS NOT NULL"
+        ).fetchall()
+
+        region_rows = conn.execute(
+            "SELECT source_team_id, AVG(elevation_m) as avg_elev, "
+            "       SUM(CASE WHEN elevation_m IS NOT NULL THEN 1 ELSE 0 END) as n "
+            "FROM incidents GROUP BY source_team_id"
+        ).fetchall()
+
+        totals = conn.execute("SELECT COUNT(*) as total FROM incidents").fetchone()
+    finally:
+        conn.close()
+
+    band_counts = {label: 0 for _, label in ELEVATION_BANDS}
+    for r in rows:
+        _, label = _band_for(r["elevation_m"])
+        band_counts[label] += 1
+
+    bands = [
+        ElevationBand(band_label=label, band_min_m=band_min, incident_count=band_counts[label])
+        for band_min, label in ELEVATION_BANDS
+    ]
+
+    by_region = [
+        RegionElevation(
+            source_team_id=r["source_team_id"],
+            region=TEAM_REGION.get(r["source_team_id"], "Unknown"),
+            average_elevation_m=round(r["avg_elev"], 1) if r["avg_elev"] is not None else None,
+            incident_count=r["n"],
+        )
+        for r in region_rows
+    ]
+
+    return ElevationStats(
+        bands=bands,
+        by_region=by_region,
+        incidents_with_elevation=len(rows),
+        total_incidents=totals["total"],
+    )
+
+
+@app.get("/stats/daylight", response_model=DaylightStats)
+def daylight_stats():
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT daylight_status, COUNT(*) as n FROM incidents "
+            "WHERE daylight_status IS NOT NULL GROUP BY daylight_status"
+        ).fetchall()
+
+        teams_rows = conn.execute(
+            "SELECT DISTINCT source_team_id FROM incidents WHERE daylight_status IS NOT NULL"
+        ).fetchall()
+
+        totals = conn.execute("SELECT COUNT(*) as total FROM incidents").fetchone()
+        with_data = conn.execute(
+            "SELECT COUNT(*) as total FROM incidents WHERE daylight_status IS NOT NULL"
+        ).fetchone()
+    finally:
+        conn.close()
+
+    counts = {r["daylight_status"]: r["n"] for r in rows}
+
+    return DaylightStats(
+        daylight_count=counts.get("daylight", 0),
+        darkness_count=counts.get("darkness", 0),
+        incidents_with_daylight_data=with_data["total"],
+        total_incidents=totals["total"],
+        teams_included=sorted(r["source_team_id"] for r in teams_rows),
+    )

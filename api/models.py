@@ -43,6 +43,14 @@ class Incident(BaseModel):
     precipitation_mm: Optional[float] = None
     wind_speed_max_kmh: Optional[float] = None
     weather_summary: Optional[str] = None
+    # Daylight/darkness at the incident's recorded start time — null
+    # wherever weather, date, or time data is missing. Always null for
+    # OVMRO specifically, since that source never records a start time
+    # at all (only an operation duration). See docs/data-dictionary.md.
+    daylight_status: Optional[str] = None
+    # Terrain elevation in metres at the geocoded location — null for
+    # any unmatched location, same reasoning as lat/lon.
+    elevation_m: Optional[float] = None
 
 
 class WeatherBreakdown(BaseModel):
@@ -191,3 +199,39 @@ class TopLocation(BaseModel):
     region: str
     source_team_id: str
     incident_count: int
+
+
+class ElevationBand(BaseModel):
+    band_label: str  # e.g. "400-600m"
+    band_min_m: int
+    incident_count: int
+
+
+class RegionElevation(BaseModel):
+    source_team_id: str
+    region: str
+    average_elevation_m: Optional[float] = None
+    incident_count: int  # count this average is based on, i.e. rows with elevation data
+
+
+class ElevationStats(BaseModel):
+    bands: list[ElevationBand]
+    by_region: list[RegionElevation]
+    incidents_with_elevation: int
+    total_incidents: int
+
+
+class DaylightStats(BaseModel):
+    """
+    Tests a specific claim Wasdale made in their own published safety
+    message — a rise in incidents from walkers becoming "benighted"
+    without a head torch — against the actual data, rather than just
+    repeating the claim. OVMRO is structurally excluded (never records
+    a start time), same as the time-of-day endpoint; teams_included
+    makes that explicit.
+    """
+    daylight_count: int
+    darkness_count: int
+    incidents_with_daylight_data: int
+    total_incidents: int
+    teams_included: list[str]

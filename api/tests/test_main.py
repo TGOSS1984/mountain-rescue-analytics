@@ -658,3 +658,87 @@ def test_top_locations_keeps_near_duplicates_separate(top_locations_client):
     assert locations["Kinder Scout"] == 12
     assert locations["Kinder"] == 5
     assert "Kinder Scout" != "Kinder"  # sanity — they really are separate keys
+
+
+@pytest.fixture
+def elevation_daylight_client(tmp_path, monkeypatch):
+    db_path = tmp_path / "test_elev_daylight.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT, daylight_status TEXT, elevation_m REAL
+        )
+    """)
+    rows = [
+        ("edale", "Kinder Scout", "2026-01-05", "17:45", "walking", "x", "inferred_from_keywords",
+         None, None, 53.38, -1.87, "matched", None, None, None, None,
+         4, 0, 0, 10, "clear", "darkness", 630),
+        ("edale", "Mam Tor", "2026-01-05", "10:00", "walking", "x", "inferred_from_keywords",
+         None, None, 53.35, -1.81, "matched", None, None, None, None,
+         4, 0, 0, 10, "clear", "daylight", 517),
+        ("wasdale", "Scafell Pike", "2026-02-01", "14:00", "walking", "x", "inferred_from_keywords",
+         None, None, 54.45, -3.21, "matched", None, None, None, None,
+         2, -2, 0, 20, "clear", "daylight", 978),
+        ("ovmro", "Tryfan", "2026-03-01", None, "climbing", "x", "inferred_from_keywords",
+         None, None, 53.11, -3.99, "matched", None, None, None, None,
+         None, None, None, None, None, None, 917),
+        ("edale", "No coords", "2026-04-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "no_match", None, None, None, None,
+         None, None, None, None, None, None, None),
+    ]
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_elevation_bands_correctly_assigned(elevation_daylight_client):
+    resp = elevation_daylight_client.get("/stats/elevation")
+    body = resp.json()
+    bands = {b["band_label"]: b["incident_count"] for b in body["bands"]}
+
+    assert bands["400-600m"] == 1  # Mam Tor, 517m
+    assert bands["600-800m"] == 1  # Kinder Scout, 630m
+    assert bands["800-1000m"] == 2  # Tryfan 917m, Scafell Pike 978m
+    assert body["incidents_with_elevation"] == 4  # ungeocoded row excluded
+    assert body["total_incidents"] == 5
+
+
+def test_elevation_region_averages(elevation_daylight_client):
+    resp = elevation_daylight_client.get("/stats/elevation")
+    by_region = {r["source_team_id"]: r for r in resp.json()["by_region"]}
+
+    assert by_region["edale"]["average_elevation_m"] == pytest.approx(573.5)
+    assert by_region["ovmro"]["average_elevation_m"] == 917.0
+    assert by_region["wasdale"]["average_elevation_m"] == 978.0
+
+
+def test_daylight_stats_correctness_and_ovmro_exclusion(elevation_daylight_client):
+    """
+    The important check: OVMRO has real elevation data in this fixture
+    but must still be fully absent from daylight stats — proving the
+    two exclusions (elevation vs. daylight) are independent, not
+    accidentally coupled to the same "has any enrichment data" flag.
+    """
+    resp = elevation_daylight_client.get("/stats/daylight")
+    body = resp.json()
+
+    assert body["daylight_count"] == 2
+    assert body["darkness_count"] == 1
+    assert "ovmro" not in body["teams_included"]
+    assert set(body["teams_included"]) == {"edale", "wasdale"}
+    assert body["incidents_with_daylight_data"] == 3
+    assert body["total_incidents"] == 5
