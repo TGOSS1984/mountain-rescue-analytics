@@ -8,6 +8,8 @@ import WeatherChart from "./components/charts/WeatherChart.jsx";
 import YearlyChart from "./components/charts/YearlyChart.jsx";
 import TimeOfDayChart from "./components/charts/TimeOfDayChart.jsx";
 import ActivityChart from "./components/charts/ActivityChart.jsx";
+import ElevationChart from "./components/charts/ElevationChart.jsx";
+import DaylightChart from "./components/charts/DaylightChart.jsx";
 import NotableStats from "./components/regions/NotableStats.jsx";
 import TopLocations from "./components/regions/TopLocations.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
@@ -15,7 +17,8 @@ import RegionPanel from "./components/regions/RegionPanel.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
 import {
   getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getTimeOfDayStats,
-  getActivityBreakdown, getNotableStats, getTopLocations, getRegions, getIncidents,
+  getActivityBreakdown, getNotableStats, getTopLocations, getElevationStats,
+  getDaylightStats, getRegions, getIncidents,
 } from "./api/client.js";
 import "./App.css";
 
@@ -71,6 +74,24 @@ export default function App() {
       .then(setActivityBreakdown)
       .catch(() => setActivityBreakdown([]))
       .finally(() => setActivityLoading(false));
+  }, []);
+
+  const [elevation, setElevation] = useState(null);
+  const [elevationLoading, setElevationLoading] = useState(true);
+  useEffect(() => {
+    getElevationStats()
+      .then(setElevation)
+      .catch(() => setElevation(null))
+      .finally(() => setElevationLoading(false));
+  }, []);
+
+  const [daylight, setDaylight] = useState(null);
+  const [daylightLoading, setDaylightLoading] = useState(true);
+  useEffect(() => {
+    getDaylightStats()
+      .then(setDaylight)
+      .catch(() => setDaylight(null))
+      .finally(() => setDaylightLoading(false));
   }, []);
 
   // Notable stats are inherently Snowdonia-specific (OVMRO is the only
@@ -213,6 +234,11 @@ export default function App() {
 
         <div className="container app__section">
           <ActivityChart data={activityBreakdown} loading={activityLoading} />
+        </div>
+
+        <div className="container app__section app__insights-grid">
+          <ElevationChart data={elevation} loading={elevationLoading} />
+          <DaylightChart data={daylight} loading={daylightLoading} />
         </div>
 
         <div className="container app__section">
