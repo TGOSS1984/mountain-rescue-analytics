@@ -38,6 +38,11 @@ export function getYearlyStats(team) {
   return request(`/stats/yearly${query}`);
 }
 
+export function getTimeOfDayStats(team) {
+  const query = team ? `?team=${encodeURIComponent(team)}` : "";
+  return request(`/stats/timeofday${query}`);
+}
+
 export function getRegions() {
   return request("/regions");
 }
