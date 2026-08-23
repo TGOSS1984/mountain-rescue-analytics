@@ -43,6 +43,10 @@ export function getTimeOfDayStats(team) {
   return request(`/stats/timeofday${query}`);
 }
 
+export function getActivityBreakdown() {
+  return request("/stats/activity-breakdown");
+}
+
 export function getRegions() {
   return request("/regions");
 }

@@ -1,0 +1,23 @@
+.activity-chart {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.activity-chart__eyebrow {
+  color: var(--color-ordnance-green);
+  margin-bottom: var(--space-2);
+}
+
+.activity-chart__title {
+  font-size: var(--text-xl);
+  margin: 0 0 var(--space-5);
+}
+
+.activity-chart__status {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-slate);
+  padding: var(--space-6) 0;
+}
