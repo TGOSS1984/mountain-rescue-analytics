@@ -51,6 +51,13 @@ export function getNotableStats() {
   return request("/stats/notable");
 }
 
+export function getTopLocations({ limit = 10, team } = {}) {
+  const params = new URLSearchParams();
+  params.set("limit", limit);
+  if (team) params.set("team", team);
+  return request(`/stats/top-locations?${params.toString()}`);
+}
+
 export function getRegions() {
   return request("/regions");
 }
