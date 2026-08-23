@@ -8,12 +8,13 @@ import WeatherChart from "./components/charts/WeatherChart.jsx";
 import YearlyChart from "./components/charts/YearlyChart.jsx";
 import TimeOfDayChart from "./components/charts/TimeOfDayChart.jsx";
 import ActivityChart from "./components/charts/ActivityChart.jsx";
+import NotableStats from "./components/regions/NotableStats.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
 import RegionPanel from "./components/regions/RegionPanel.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
 import {
   getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getTimeOfDayStats,
-  getActivityBreakdown, getRegions, getIncidents,
+  getActivityBreakdown, getNotableStats, getRegions, getIncidents,
 } from "./api/client.js";
 import "./App.css";
 
@@ -69,6 +70,18 @@ export default function App() {
       .then(setActivityBreakdown)
       .catch(() => setActivityBreakdown([]))
       .finally(() => setActivityLoading(false));
+  }, []);
+
+  // Notable stats are inherently Snowdonia-specific (OVMRO is the only
+  // source with duration/team-size data), so they don't respond to the
+  // region filter — the component labels this clearly itself.
+  const [notable, setNotable] = useState(null);
+  const [notableLoading, setNotableLoading] = useState(true);
+  useEffect(() => {
+    getNotableStats()
+      .then(setNotable)
+      .catch(() => setNotable(null))
+      .finally(() => setNotableLoading(false));
   }, []);
 
   useEffect(() => {
@@ -186,6 +199,10 @@ export default function App() {
 
         <div className="container app__section">
           <ActivityChart data={activityBreakdown} loading={activityLoading} />
+        </div>
+
+        <div className="container app__section">
+          <NotableStats data={notable} loading={notableLoading} />
         </div>
 
         <div className="container app__section">
