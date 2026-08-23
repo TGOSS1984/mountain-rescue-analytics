@@ -14,6 +14,7 @@ weather reading is still a real incident and stays in the dataset.
 """
 
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -65,11 +66,40 @@ def _load_region_weather(region):
         "precipitation_mm": daily["precipitation_sum"],
         "wind_speed_max_kmh": daily["windspeed_10m_max"],
         "weathercode": daily["weathercode"],
+        "sunrise": daily.get("sunrise"),
+        "sunset": daily.get("sunset"),
     })
     weather_df["weather_summary"] = weather_df["weathercode"].map(
         lambda c: WEATHERCODE_BUCKETS.get(c, "other")
     )
+    weather_df["sunrise"] = weather_df["sunrise"].map(_extract_hhmm)
+    weather_df["sunset"] = weather_df["sunset"].map(_extract_hhmm)
     return weather_df
+
+
+def _extract_hhmm(iso_datetime):
+    """Open-Meteo returns sunrise/sunset as ISO8601 local time, e.g.
+    '2026-01-05T08:12'. Only the HH:MM portion is needed for comparison
+    against the incident's own HH:MM time field."""
+    if pd.isna(iso_datetime):
+        return None
+    match = re.search(r"T(\d{2}:\d{2})", str(iso_datetime))
+    return match.group(1) if match else None
+
+
+def compute_daylight_status(incident_time, sunrise, sunset):
+    """
+    'daylight' if the incident's recorded start time falls between
+    sunrise and sunset that day, 'darkness' otherwise, None if any of
+    the three inputs is missing. String HH:MM comparison is valid here
+    since all three values share the same fixed-width zero-padded
+    format (Python string comparison on '08:05' vs '17:30' behaves
+    correctly for times within a single day, the same way it works for
+    ISO date strings).
+    """
+    if pd.isna(incident_time) or pd.isna(sunrise) or pd.isna(sunset):
+        return None
+    return "daylight" if sunrise <= incident_time <= sunset else "darkness"
 
 
 def main():
@@ -104,11 +134,26 @@ def main():
         merged = incidents.merge(all_weather, on=["region", "date"], how="left")
     else:
         merged = incidents.copy()
-        for col in ["temp_max_c", "temp_min_c", "precipitation_mm", "wind_speed_max_kmh", "weather_summary"]:
+        for col in ["temp_max_c", "temp_min_c", "precipitation_mm", "wind_speed_max_kmh",
+                    "weather_summary", "sunrise", "sunset"]:
             merged[col] = None
+
+    # Tests whether Wasdale's own stated safety observation — a rise in
+    # incidents from walkers becoming "benighted" without a head torch —
+    # actually shows up in the data, rather than just asserting it does.
+    # Only possible where both a parsed incident time AND that day's
+    # sunrise/sunset are available — OVMRO never has an incident time
+    # (see clean_incidents.py), so this column is structurally null for
+    # every OVMRO row, the same honest gap as the time-of-day chart.
+    merged["daylight_status"] = merged.apply(
+        lambda r: compute_daylight_status(r.get("time"), r.get("sunrise"), r.get("sunset")),
+        axis=1,
+    )
 
     matched = merged["weather_summary"].notna().sum()
     print(f"  matched weather for {matched}/{len(merged)} incidents")
+    daylight_known = merged["daylight_status"].notna().sum()
+    print(f"  daylight/darkness determined for {daylight_known}/{len(merged)} incidents")
 
     out_path = INTERIM_DIR / "incidents_with_weather.csv"
     merged.to_csv(out_path, index=False, encoding="utf-8")

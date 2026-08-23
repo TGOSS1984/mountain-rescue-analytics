@@ -48,7 +48,7 @@ TEAM_REGION = {
     "ovmro": "Snowdonia (Eryri)",
 }
 
-DAILY_VARIABLES = "temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,weathercode"
+DAILY_VARIABLES = "temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,weathercode,sunrise,sunset"
 
 
 def _is_retryable(exception):
