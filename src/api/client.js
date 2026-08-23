@@ -58,6 +58,14 @@ export function getTopLocations({ limit = 10, team } = {}) {
   return request(`/stats/top-locations?${params.toString()}`);
 }
 
+export function getElevationStats() {
+  return request("/stats/elevation");
+}
+
+export function getDaylightStats() {
+  return request("/stats/daylight");
+}
+
 export function getRegions() {
   return request("/regions");
 }

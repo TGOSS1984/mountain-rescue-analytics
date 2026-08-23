@@ -1,0 +1,61 @@
+.elevation-chart {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.elevation-chart__eyebrow {
+  color: var(--color-ordnance-green);
+  margin-bottom: var(--space-2);
+}
+
+.elevation-chart__title {
+  font-size: var(--text-xl);
+  margin: 0 0 var(--space-5);
+}
+
+.elevation-chart__status {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-slate);
+  padding: var(--space-6) 0;
+}
+
+.elevation-chart__tooltip {
+  background: var(--color-ink);
+  color: var(--color-mist-soft);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+
+.elevation-chart__region-avgs {
+  display: flex;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.elevation-chart__region-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.elevation-chart__region-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-slate);
+  text-transform: uppercase;
+}
+
+.elevation-chart__region-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ordnance-green);
+  font-weight: var(--weight-medium);
+}
