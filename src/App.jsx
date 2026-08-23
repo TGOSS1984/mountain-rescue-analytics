@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Header from "./components/layout/Header.jsx";
 import Hero from "./components/layout/Hero.jsx";
+import Footer from "./components/layout/Footer.jsx";
 import Filters from "./components/filters/Filters.jsx";
 import MonthlyChart from "./components/charts/MonthlyChart.jsx";
 import WeatherChart from "./components/charts/WeatherChart.jsx";
@@ -177,6 +178,7 @@ export default function App() {
           )}
         </div>
       </main>
+      <Footer stats={stats} />
     </>
   );
 }
