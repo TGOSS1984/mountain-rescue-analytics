@@ -742,3 +742,73 @@ def test_daylight_stats_correctness_and_ovmro_exclusion(elevation_daylight_clien
     assert set(body["teams_included"]) == {"edale", "wasdale"}
     assert body["incidents_with_daylight_data"] == 3
     assert body["total_incidents"] == 5
+
+
+@pytest.fixture
+def dow_holiday_client(tmp_path, monkeypatch):
+    db_path = tmp_path / "test_dow_holiday.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT, daylight_status TEXT, elevation_m REAL,
+            is_bank_holiday INTEGER, day_of_week TEXT, is_weekend INTEGER
+        )
+    """)
+    rows = []
+    def add(date, holiday, dow, weekend, n):
+        for i in range(n):
+            rows.append(("edale", f"Loc{i}", date, None, "walking", "x", "inferred_from_keywords",
+                         None, None, None, None, "matched", None, None, None, None,
+                         None, None, None, None, None, None, None, holiday, dow, weekend))
+    add("2026-01-01", 1, "Thursday", 0, 6)
+    add("2026-01-02", 0, "Friday", 0, 2)
+    add("2026-01-03", 0, "Saturday", 1, 2)
+    add("2026-01-05", 0, "Monday", 0, 2)
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_day_of_week_ordering_and_counts(dow_holiday_client):
+    resp = dow_holiday_client.get("/stats/day-of-week")
+    body = resp.json()
+
+    days = [d["day_of_week"] for d in body["by_day"]]
+    assert days == ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    counts = {d["day_of_week"]: d["incident_count"] for d in body["by_day"]}
+    assert counts["Thursday"] == 6
+    assert counts["Tuesday"] == 0
+    assert body["weekday_count"] == 10
+    assert body["weekend_count"] == 2
+
+
+def test_bank_holiday_uses_per_day_average_not_raw_total(dow_holiday_client):
+    """
+    The core reason this endpoint computes per-day averages: 6 raw
+    incidents on the one bank holiday vs 6 raw incidents across three
+    ordinary days would tie at "6 vs 6" if compared as totals — but the
+    honest per-day rate is 6.0/day for the holiday vs 2.0/day for
+    ordinary days, a real and correctly threefold difference.
+    """
+    resp = dow_holiday_client.get("/stats/bank-holidays")
+    body = resp.json()
+
+    assert body["avg_incidents_per_bank_holiday"] == 6.0
+    assert body["avg_incidents_per_ordinary_day"] == 2.0
+    assert body["bank_holiday_days_observed"] == 1
+    assert body["ordinary_days_observed"] == 3

@@ -19,6 +19,7 @@ from models import (
     YearlySummary, WeatherStats, WeatherBreakdown, TimeOfDayStats, TimeOfDayBucket,
     ActivityBreakdownRow, NotableStats, NotableRecord, TopLocation,
     ElevationStats, ElevationBand, RegionElevation, DaylightStats,
+    DayOfWeekCount, DayOfWeekStats, BankHolidayComparison,
 )
 
 app = FastAPI(
@@ -613,4 +614,80 @@ def daylight_stats():
         incidents_with_daylight_data=with_data["total"],
         total_incidents=totals["total"],
         teams_included=sorted(r["source_team_id"] for r in teams_rows),
+    )
+
+
+DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+@app.get("/stats/day-of-week", response_model=DayOfWeekStats)
+def day_of_week_stats():
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT day_of_week, COUNT(*) as n FROM incidents "
+            "WHERE day_of_week IS NOT NULL GROUP BY day_of_week"
+        ).fetchall()
+
+        weekend_totals = conn.execute(
+            "SELECT is_weekend, COUNT(*) as n FROM incidents "
+            "WHERE is_weekend IS NOT NULL GROUP BY is_weekend"
+        ).fetchall()
+
+        totals = conn.execute("SELECT COUNT(*) as total FROM incidents").fetchone()
+        with_data = conn.execute(
+            "SELECT COUNT(*) as total FROM incidents WHERE day_of_week IS NOT NULL"
+        ).fetchone()
+    finally:
+        conn.close()
+
+    counts = {r["day_of_week"]: r["n"] for r in rows}
+    by_day = [DayOfWeekCount(day_of_week=d, incident_count=counts.get(d, 0)) for d in DAY_ORDER]
+
+    weekend_map = {bool(r["is_weekend"]): r["n"] for r in weekend_totals}
+
+    return DayOfWeekStats(
+        by_day=by_day,
+        weekday_count=weekend_map.get(False, 0),
+        weekend_count=weekend_map.get(True, 0),
+        incidents_with_data=with_data["total"],
+        total_incidents=totals["total"],
+    )
+
+
+@app.get("/stats/bank-holidays", response_model=BankHolidayComparison)
+def bank_holiday_stats():
+    conn = get_connection()
+    try:
+        # Per-distinct-day counts, split by holiday status — mirrors the
+        # weather endpoint's days_by_weather pattern, for the same reason:
+        # a raw incident-count comparison would be meaningless given the
+        # huge imbalance between ~8 bank holidays and ~357 ordinary days
+        # a year.
+        daily_counts = conn.execute(
+            "SELECT date, is_bank_holiday, COUNT(*) as n FROM incidents "
+            "WHERE is_bank_holiday IS NOT NULL AND date IS NOT NULL "
+            "GROUP BY date, is_bank_holiday"
+        ).fetchall()
+
+        totals = conn.execute("SELECT COUNT(*) as total FROM incidents").fetchone()
+        with_data = conn.execute(
+            "SELECT COUNT(*) as total FROM incidents WHERE is_bank_holiday IS NOT NULL"
+        ).fetchone()
+    finally:
+        conn.close()
+
+    holiday_day_counts = [r["n"] for r in daily_counts if r["is_bank_holiday"]]
+    ordinary_day_counts = [r["n"] for r in daily_counts if not r["is_bank_holiday"]]
+
+    avg_holiday = sum(holiday_day_counts) / len(holiday_day_counts) if holiday_day_counts else 0.0
+    avg_ordinary = sum(ordinary_day_counts) / len(ordinary_day_counts) if ordinary_day_counts else 0.0
+
+    return BankHolidayComparison(
+        avg_incidents_per_bank_holiday=round(avg_holiday, 2),
+        avg_incidents_per_ordinary_day=round(avg_ordinary, 2),
+        bank_holiday_days_observed=len(holiday_day_counts),
+        ordinary_days_observed=len(ordinary_day_counts),
+        incidents_with_known_holiday_status=with_data["total"],
+        total_incidents=totals["total"],
     )

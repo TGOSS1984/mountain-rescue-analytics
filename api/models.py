@@ -51,6 +51,12 @@ class Incident(BaseModel):
     # Terrain elevation in metres at the geocoded location — null for
     # any unmatched location, same reasoning as lat/lon.
     elevation_m: Optional[float] = None
+    # Bank holiday status is null for dates outside the range the
+    # gov.uk API actually publishes (a rolling few years), not just
+    # dates without a holiday — see docs/data-dictionary.md.
+    is_bank_holiday: Optional[bool] = None
+    day_of_week: Optional[str] = None
+    is_weekend: Optional[bool] = None
 
 
 class WeatherBreakdown(BaseModel):
@@ -235,3 +241,34 @@ class DaylightStats(BaseModel):
     incidents_with_daylight_data: int
     total_incidents: int
     teams_included: list[str]
+
+
+class DayOfWeekCount(BaseModel):
+    day_of_week: str
+    incident_count: int
+
+
+class DayOfWeekStats(BaseModel):
+    by_day: list[DayOfWeekCount]  # Monday through Sunday, in order
+    weekday_count: int
+    weekend_count: int
+    incidents_with_data: int
+    total_incidents: int
+
+
+class BankHolidayComparison(BaseModel):
+    """
+    Average incidents PER DAY for bank holidays vs. ordinary days, not
+    raw totals — there are only ~8 bank holidays a year against ~357
+    ordinary days, so a raw total comparison would trivially and
+    meaninglessly favour ordinary days every time. This is the same
+    "days vs incidents" honesty pattern already used for the weather
+    endpoint. Only dates within the range the gov.uk API actually
+    covers are included — see is_bank_holiday's docstring on Incident.
+    """
+    avg_incidents_per_bank_holiday: float
+    avg_incidents_per_ordinary_day: float
+    bank_holiday_days_observed: int
+    ordinary_days_observed: int
+    incidents_with_known_holiday_status: int
+    total_incidents: int
