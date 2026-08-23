@@ -174,3 +174,72 @@ def test_pagination_limit_and_offset(client):
     first_ids = {i["source_url"] for i in first_page["incidents"]}
     second_ids = {i["source_url"] for i in second_page["incidents"]}
     assert first_ids.isdisjoint(second_ids)
+
+
+@pytest.fixture
+def weather_client(tmp_path, monkeypatch):
+    """Separate fixture with weather columns populated, including the
+    'multiple incidents on one day' case that the days-vs-incidents
+    distinction exists to handle correctly."""
+    db_path = tmp_path / "test_weather.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT
+        )
+    """)
+    rows = [
+        ("edale", "A", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, 5, 0, 50, 80, "storm"),
+        ("edale", "B", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, 5, 0, 50, 80, "storm"),
+        ("edale", "C", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, 5, 0, 50, 80, "storm"),
+        ("edale", "D", "2026-02-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, 8, 2, 5, 20, "cloudy"),
+        ("edale", "E", "2026-02-02", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, 9, 3, 2, 15, "cloudy"),
+        ("edale", "F", "2026-02-03", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+    ]
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_weather_stats_distinguishes_days_from_incidents(weather_client):
+    """
+    The core reason this endpoint exists: 3 incidents on a single storm
+    day must not be reported as "3 storm days" — that would overstate
+    how often storms actually occur relative to how many incidents
+    happen during them.
+    """
+    resp = weather_client.get("/stats/weather")
+    body = resp.json()
+
+    incidents_storm = next(w for w in body["incidents_by_weather"] if w["weather_summary"] == "storm")
+    days_storm = next(w for w in body["days_by_weather"] if w["weather_summary"] == "storm")
+
+    assert incidents_storm["incident_count"] == 3
+    assert days_storm["incident_count"] == 1
+
+
+def test_weather_stats_excludes_rows_without_weather_data(weather_client):
+    resp = weather_client.get("/stats/weather")
+    body = resp.json()
+    assert body["total_incidents"] == 6
+    assert body["incidents_with_weather_data"] == 5

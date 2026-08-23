@@ -14,7 +14,10 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import get_connection
-from models import Incident, IncidentList, OverallStats, RegionSummary, MonthlySummary
+from models import (
+    Incident, IncidentList, OverallStats, RegionSummary, MonthlySummary,
+    WeatherStats, WeatherBreakdown,
+)
 
 app = FastAPI(
     title="Mountain Rescue Incident Analytics API",
@@ -215,3 +218,66 @@ def monthly_stats(team: Optional[str] = Query(None)):
         conn.close()
 
     return [MonthlySummary(month=r["month"], incident_count=r["incident_count"]) for r in rows]
+
+
+@app.get("/stats/weather", response_model=WeatherStats)
+def weather_stats(team: Optional[str] = Query(None)):
+    """
+    Incidents broken down by weather condition on the day, alongside
+    how many distinct (region, date) days had each condition — the
+    second series is what makes this an honest comparison rather than
+    a misleading one. Most days are ordinary, so most incidents will
+    land on ordinary-weather days no matter what; what's actually
+    interesting is whether incidents are *disproportionately* common on
+    bad-weather days relative to how often those days occur, which
+    needs both numbers side by side to see.
+    """
+    conn = get_connection()
+    try:
+        params: list = []
+        where_clause = "WHERE weather_summary IS NOT NULL"
+        if team:
+            where_clause += " AND source_team_id = ?"
+            params.append(team)
+
+        incident_rows = conn.execute(
+            f"SELECT weather_summary, COUNT(*) as incident_count "
+            f"FROM incidents {where_clause} "
+            f"GROUP BY weather_summary ORDER BY incident_count DESC",
+            params,
+        ).fetchall()
+
+        # Distinct (region, date) pairs per weather condition — a day
+        # with 5 incidents shouldn't count as "storm" 5 times over when
+        # asking "how many storm days were there".
+        day_rows = conn.execute(
+            f"SELECT weather_summary, COUNT(*) as incident_count FROM ("
+            f"  SELECT DISTINCT source_team_id, date, weather_summary "
+            f"  FROM incidents {where_clause}"
+            f") GROUP BY weather_summary ORDER BY incident_count DESC",
+            params,
+        ).fetchall()
+
+        totals = conn.execute(
+            f"SELECT COUNT(*) as total FROM incidents "
+            f"{'WHERE source_team_id = ?' if team else ''}",
+            [team] if team else [],
+        ).fetchone()
+        with_weather = conn.execute(
+            f"SELECT COUNT(*) as total FROM incidents {where_clause}", params
+        ).fetchone()
+    finally:
+        conn.close()
+
+    return WeatherStats(
+        incidents_by_weather=[
+            WeatherBreakdown(weather_summary=r["weather_summary"], incident_count=r["incident_count"])
+            for r in incident_rows
+        ],
+        days_by_weather=[
+            WeatherBreakdown(weather_summary=r["weather_summary"], incident_count=r["incident_count"])
+            for r in day_rows
+        ],
+        incidents_with_weather_data=with_weather["total"],
+        total_incidents=totals["total"],
+    )

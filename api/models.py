@@ -33,6 +33,37 @@ class Incident(BaseModel):
     duration_minutes: Optional[float] = None
     casualties_count: Optional[float] = None
     team_members_attended: Optional[float] = None
+    # Regional daily weather on the incident's date — null wherever the
+    # date itself is missing/unparseable, or falls outside the range
+    # fetched for that region. Region-level (one weather reading shared
+    # by every incident in that region on that day), not per-incident —
+    # see docs/data-dictionary.md for what that trade-off means.
+    temp_max_c: Optional[float] = None
+    temp_min_c: Optional[float] = None
+    precipitation_mm: Optional[float] = None
+    wind_speed_max_kmh: Optional[float] = None
+    weather_summary: Optional[str] = None
+
+
+class WeatherBreakdown(BaseModel):
+    weather_summary: str
+    incident_count: int
+
+
+class WeatherStats(BaseModel):
+    """
+    Summary stats for the weather-vs-incidents insight: how incident
+    counts break down by weather condition, plus enough context (the
+    number of *days* with each condition, not just incidents) to tell
+    "storms cause more incidents" apart from "there just happen to be
+    more incidents on the many ordinary cloudy days" — the second is
+    the far more common real answer, and the API should make it
+    possible to check that rather than inviting the wrong conclusion.
+    """
+    incidents_by_weather: list[WeatherBreakdown]
+    days_by_weather: list[WeatherBreakdown]  # same shape, but counting distinct weather-days, not incidents
+    incidents_with_weather_data: int
+    total_incidents: int
 
 
 class IncidentList(BaseModel):
