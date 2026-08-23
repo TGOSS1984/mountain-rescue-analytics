@@ -47,6 +47,10 @@ export function getActivityBreakdown() {
   return request("/stats/activity-breakdown");
 }
 
+export function getNotableStats() {
+  return request("/stats/notable");
+}
+
 export function getRegions() {
   return request("/regions");
 }
