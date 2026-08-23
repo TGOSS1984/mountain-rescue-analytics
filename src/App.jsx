@@ -5,10 +5,13 @@ import Footer from "./components/layout/Footer.jsx";
 import Filters from "./components/filters/Filters.jsx";
 import MonthlyChart from "./components/charts/MonthlyChart.jsx";
 import WeatherChart from "./components/charts/WeatherChart.jsx";
+import YearlyChart from "./components/charts/YearlyChart.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
 import RegionPanel from "./components/regions/RegionPanel.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
-import { getStats, getMonthlyStats, getWeatherStats, getRegions, getIncidents } from "./api/client.js";
+import {
+  getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getRegions, getIncidents,
+} from "./api/client.js";
 import "./App.css";
 
 const DEFAULT_FILTERS = { team: "", activityType: "", geocodedOnly: false };
@@ -60,6 +63,16 @@ export default function App() {
       .then(setMonthly)
       .catch(() => setMonthly([]))
       .finally(() => setMonthlyLoading(false));
+  }, [filters.team]);
+
+  const [yearly, setYearly] = useState([]);
+  const [yearlyLoading, setYearlyLoading] = useState(true);
+  useEffect(() => {
+    setYearlyLoading(true);
+    getYearlyStats(filters.team || undefined)
+      .then(setYearly)
+      .catch(() => setYearly([]))
+      .finally(() => setYearlyLoading(false));
   }, [filters.team]);
 
   useEffect(() => {
@@ -131,6 +144,10 @@ export default function App() {
 
         <div className="container app__section">
           <Filters value={filters} onChange={setFilters} />
+        </div>
+
+        <div className="container app__section">
+          <YearlyChart data={yearly} loading={yearlyLoading} activeTeam={filters.team} />
         </div>
 
         <div className="container app__section app__insights-grid">
