@@ -5,8 +5,9 @@ import Filters from "./components/filters/Filters.jsx";
 import MonthlyChart from "./components/charts/MonthlyChart.jsx";
 import WeatherChart from "./components/charts/WeatherChart.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
+import RegionPanel from "./components/regions/RegionPanel.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
-import { getStats, getMonthlyStats, getWeatherStats, getIncidents } from "./api/client.js";
+import { getStats, getMonthlyStats, getWeatherStats, getRegions, getIncidents } from "./api/client.js";
 import "./App.css";
 
 const DEFAULT_FILTERS = { team: "", activityType: "", geocodedOnly: false };
@@ -38,6 +39,18 @@ export default function App() {
       .then(setStats)
       .catch((err) => setStatsError(err.message))
       .finally(() => setStatsLoading(false));
+  }, []);
+
+  // Regions comparison is also filter-independent by design — comparing
+  // "Peak District vs Lake District vs Snowdonia" stops meaning
+  // anything once you've filtered down to a single region.
+  const [regions, setRegions] = useState([]);
+  const [regionsLoading, setRegionsLoading] = useState(true);
+  useEffect(() => {
+    getRegions()
+      .then(setRegions)
+      .catch(() => setRegions([]))
+      .finally(() => setRegionsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -125,6 +138,10 @@ export default function App() {
         </div>
 
         <div className="container app__section" id="regions">
+          <RegionPanel regions={regions} loading={regionsLoading} />
+        </div>
+
+        <div className="container app__section">
           <IncidentMap incidents={mapIncidents} loading={mapLoading} />
         </div>
 
