@@ -7,12 +7,13 @@ import MonthlyChart from "./components/charts/MonthlyChart.jsx";
 import WeatherChart from "./components/charts/WeatherChart.jsx";
 import YearlyChart from "./components/charts/YearlyChart.jsx";
 import TimeOfDayChart from "./components/charts/TimeOfDayChart.jsx";
+import ActivityChart from "./components/charts/ActivityChart.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
 import RegionPanel from "./components/regions/RegionPanel.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
 import {
   getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getTimeOfDayStats,
-  getRegions, getIncidents,
+  getActivityBreakdown, getRegions, getIncidents,
 } from "./api/client.js";
 import "./App.css";
 
@@ -57,6 +58,17 @@ export default function App() {
       .then(setRegions)
       .catch(() => setRegions([]))
       .finally(() => setRegionsLoading(false));
+  }, []);
+
+  // Activity breakdown is filter-independent, same reasoning as
+  // regions — the cross-region comparison is the whole point.
+  const [activityBreakdown, setActivityBreakdown] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  useEffect(() => {
+    getActivityBreakdown()
+      .then(setActivityBreakdown)
+      .catch(() => setActivityBreakdown([]))
+      .finally(() => setActivityLoading(false));
   }, []);
 
   useEffect(() => {
@@ -170,6 +182,10 @@ export default function App() {
 
         <div className="container app__section" id="regions">
           <RegionPanel regions={regions} loading={regionsLoading} />
+        </div>
+
+        <div className="container app__section">
+          <ActivityChart data={activityBreakdown} loading={activityLoading} />
         </div>
 
         <div className="container app__section">
