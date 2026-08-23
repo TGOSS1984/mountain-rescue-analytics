@@ -1,10 +1,11 @@
 """
 run_pipeline.py
 
-Runs the full chain: scrape -> clean -> validate -> geocode -> report.
-Each step's output is written to disk before the next step starts, so if
-something fails partway through, you can inspect exactly what the
-previous step produced rather than re-running everything blind.
+Runs the full chain: scrape -> clean -> validate -> weather -> geocode
+-> warehouse. Each step's output is written to disk before the next
+step starts, so if something fails partway through, you can inspect
+exactly what the previous step produced rather than re-running
+everything blind.
 
 Usage:
     python run_pipeline.py             # full run
@@ -21,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "ingest"))
 sys.path.insert(0, str(Path(__file__).parent / "clean"))
 sys.path.insert(0, str(Path(__file__).parent / "validate"))
+sys.path.insert(0, str(Path(__file__).parent / "weather"))
 sys.path.insert(0, str(Path(__file__).parent / "geocode"))
 sys.path.insert(0, str(Path(__file__).parent / "warehouse"))
 
@@ -35,19 +37,19 @@ def main():
 
     print("=" * 60)
     if not args.skip_scrape:
-        print("STEP 1/5 — scraping team incident logs")
+        print("STEP 1/6 — scraping team incident logs")
         import scrape_team_incidents
         scrape_team_incidents.main()
     else:
-        print("STEP 1/5 — skipped (--skip-scrape), using existing raw data")
+        print("STEP 1/6 — skipped (--skip-scrape), using existing raw data")
 
     print("=" * 60)
-    print("STEP 2/5 — cleaning and standardising")
+    print("STEP 2/6 — cleaning and standardising")
     import clean_incidents
     clean_incidents.main()
 
     print("=" * 60)
-    print("STEP 3/5 — validating against schema")
+    print("STEP 3/6 — validating against schema")
     import schema
     interim_path = Path(__file__).parent / "data" / "interim" / "incidents_cleaned.csv"
     df = pd.read_csv(interim_path)
@@ -55,18 +57,25 @@ def main():
         schema.validate(df)
         print(f"validation passed — {len(df)} rows")
     except Exception as e:
-        print("VALIDATION FAILED — stopping before geocoding.")
+        print("VALIDATION FAILED — stopping before weather/geocoding.")
         print("Fix the cleaning logic or the schema, don't loosen the schema just to pass.")
         print(e)
         sys.exit(1)
 
     print("=" * 60)
-    print("STEP 4/5 — geocoding locations")
+    print("STEP 4/6 — fetching and joining regional weather")
+    import fetch_weather
+    import join_weather
+    fetch_weather.main()
+    join_weather.main()
+
+    print("=" * 60)
+    print("STEP 5/6 — geocoding locations")
     import geocode_locations
     geocode_locations.main()
 
     print("=" * 60)
-    print("STEP 5/5 — building SQLite warehouse")
+    print("STEP 6/6 — building SQLite warehouse")
     import build_warehouse
     build_warehouse.build()
 

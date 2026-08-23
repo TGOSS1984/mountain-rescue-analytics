@@ -211,7 +211,11 @@ def geocode_all(df, location_col="location_text", team_col="source_team_id"):
 
 
 def main():
-    in_path = INTERIM_DIR / "incidents_cleaned.csv"
+    # Reads the weather-joined file rather than the plain cleaned one —
+    # weather enrichment happens between cleaning/validation and
+    # geocoding in the pipeline order (see run_pipeline.py), so by this
+    # point every row that has a weather match already carries it.
+    in_path = INTERIM_DIR / "incidents_with_weather.csv"
     if not in_path.exists():
         print("no cleaned incidents found — run pipeline/clean/clean_incidents.py first")
         return
