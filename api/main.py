@@ -17,6 +17,7 @@ from database import get_connection
 from models import (
     Incident, IncidentList, OverallStats, RegionSummary, MonthlySummary,
     YearlySummary, WeatherStats, WeatherBreakdown, TimeOfDayStats, TimeOfDayBucket,
+    ActivityBreakdownRow,
 )
 
 app = FastAPI(
@@ -407,3 +408,34 @@ def time_of_day_stats(team: Optional[str] = Query(None)):
         total_incidents=totals["total"],
         teams_with_time_data=sorted(r["source_team_id"] for r in teams_rows),
     )
+
+
+@app.get("/stats/activity-breakdown", response_model=list[ActivityBreakdownRow])
+def activity_breakdown():
+    """
+    Full activity-type distribution per region — not just the single
+    "most common" figure /regions gives. This is what actually shows
+    "Snowdonia skews climbing, the other two skew walking" as a
+    proportion, not just a headline label. Deliberately not
+    team-filterable: comparing one region's activity mix against itself
+    doesn't mean anything, the whole point is the cross-region shape.
+    """
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT source_team_id, activity_type, COUNT(*) as n "
+            "FROM incidents GROUP BY source_team_id, activity_type "
+            "ORDER BY source_team_id, n DESC"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    return [
+        ActivityBreakdownRow(
+            source_team_id=r["source_team_id"],
+            region=TEAM_REGION.get(r["source_team_id"], "Unknown"),
+            activity_type=r["activity_type"],
+            incident_count=r["n"],
+        )
+        for r in rows
+    ]

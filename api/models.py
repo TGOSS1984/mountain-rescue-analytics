@@ -135,3 +135,17 @@ class OverallStats(BaseModel):
     date_range_start: Optional[str] = None
     date_range_end: Optional[str] = None
     regions: list[RegionSummary]
+
+
+class ActivityBreakdownRow(BaseModel):
+    """
+    Tidy (long-format) rows: one per (region, activity_type) pair with
+    a nonzero count. The frontend pivots this into the wide shape a
+    stacked bar chart needs — kept tidy here rather than pre-pivoted,
+    since that's the more normal REST shape and doesn't bake in an
+    assumption about which activity types exist ahead of time.
+    """
+    source_team_id: str
+    region: str
+    activity_type: str
+    incident_count: int

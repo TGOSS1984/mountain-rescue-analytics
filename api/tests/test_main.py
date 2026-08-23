@@ -470,3 +470,61 @@ def test_timeofday_returns_all_24_hours_including_zero_count(timeofday_client):
     assert hour_9["incident_count"] == 1
     assert hour_14["incident_count"] == 2
     assert hour_3["incident_count"] == 0
+
+
+@pytest.fixture
+def activity_breakdown_client(tmp_path, monkeypatch):
+    db_path = tmp_path / "test_activity.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT
+        )
+    """)
+    rows = []
+    for i in range(6):
+        rows.append(("edale", f"A{i}", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+                      None, None, None, None, "matched", None, None, None, None, None, None, None, None, None))
+    for i in range(2):
+        rows.append(("edale", f"B{i}", "2026-01-01", None, "climbing", "x", "inferred_from_keywords",
+                      None, None, None, None, "matched", None, None, None, None, None, None, None, None, None))
+    for i in range(7):
+        rows.append(("ovmro", f"C{i}", "2026-01-01", None, "climbing", "x", "inferred_from_keywords",
+                      None, None, None, None, "matched", None, None, None, None, None, None, None, None, None))
+    for i in range(1):
+        rows.append(("ovmro", f"D{i}", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+                      None, None, None, None, "matched", None, None, None, None, None, None, None, None, None))
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_activity_breakdown_shows_regional_skew(activity_breakdown_client):
+    """The core reason this endpoint exists: Snowdonia's real skew
+    toward climbing vs. the other regions' skew toward walking must
+    show up as proportions, not be flattened into one 'top activity'
+    label."""
+    resp = activity_breakdown_client.get("/stats/activity-breakdown")
+    body = resp.json()
+
+    edale_rows = {r["activity_type"]: r["incident_count"] for r in body if r["source_team_id"] == "edale"}
+    ovmro_rows = {r["activity_type"]: r["incident_count"] for r in body if r["source_team_id"] == "ovmro"}
+
+    assert edale_rows["walking"] == 6
+    assert edale_rows["climbing"] == 2
+    assert ovmro_rows["climbing"] == 7
+    assert ovmro_rows["walking"] == 1
