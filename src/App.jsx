@@ -6,11 +6,13 @@ import Filters from "./components/filters/Filters.jsx";
 import MonthlyChart from "./components/charts/MonthlyChart.jsx";
 import WeatherChart from "./components/charts/WeatherChart.jsx";
 import YearlyChart from "./components/charts/YearlyChart.jsx";
+import TimeOfDayChart from "./components/charts/TimeOfDayChart.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
 import RegionPanel from "./components/regions/RegionPanel.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
 import {
-  getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getRegions, getIncidents,
+  getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getTimeOfDayStats,
+  getRegions, getIncidents,
 } from "./api/client.js";
 import "./App.css";
 
@@ -73,6 +75,16 @@ export default function App() {
       .then(setYearly)
       .catch(() => setYearly([]))
       .finally(() => setYearlyLoading(false));
+  }, [filters.team]);
+
+  const [timeOfDay, setTimeOfDay] = useState(null);
+  const [timeOfDayLoading, setTimeOfDayLoading] = useState(true);
+  useEffect(() => {
+    setTimeOfDayLoading(true);
+    getTimeOfDayStats(filters.team || undefined)
+      .then(setTimeOfDay)
+      .catch(() => setTimeOfDay(null))
+      .finally(() => setTimeOfDayLoading(false));
   }, [filters.team]);
 
   useEffect(() => {
@@ -153,6 +165,7 @@ export default function App() {
         <div className="container app__section app__insights-grid">
           <MonthlyChart data={monthly} loading={monthlyLoading} />
           <WeatherChart data={weather} loading={weatherLoading} />
+          <TimeOfDayChart data={timeOfDay} loading={timeOfDayLoading} activeTeam={filters.team} />
         </div>
 
         <div className="container app__section" id="regions">

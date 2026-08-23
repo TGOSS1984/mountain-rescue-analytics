@@ -69,7 +69,7 @@ export default function TimeOfDayChart({ data, loading, activeTeam }) {
               fontFamily="JetBrains Mono, monospace"
               tickLine={false}
               axisLine={{ stroke: "var(--color-border)" }}
-              interval={1}
+              interval={3}
             />
             <YAxis hide />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
