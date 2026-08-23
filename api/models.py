@@ -66,6 +66,25 @@ class WeatherStats(BaseModel):
     total_incidents: int
 
 
+class TimeOfDayBucket(BaseModel):
+    hour: int  # 0-23
+    incident_count: int
+
+
+class TimeOfDayStats(BaseModel):
+    """
+    OVMRO's source data only gives an operation *duration*, never a
+    start time (see pipeline/clean/clean_incidents.py) — so this isn't
+    "less complete" for Snowdonia, it's structurally absent. teams_with_time_data
+    makes that explicit rather than letting a viewer assume all three
+    regions are represented here the way they are in every other chart.
+    """
+    buckets: list[TimeOfDayBucket]
+    incidents_with_time_data: int
+    total_incidents: int
+    teams_with_time_data: list[str]
+
+
 class IncidentList(BaseModel):
     total: int
     limit: int

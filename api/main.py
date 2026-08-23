@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import get_connection
 from models import (
     Incident, IncidentList, OverallStats, RegionSummary, MonthlySummary,
-    YearlySummary, WeatherStats, WeatherBreakdown,
+    YearlySummary, WeatherStats, WeatherBreakdown, TimeOfDayStats, TimeOfDayBucket,
 )
 
 app = FastAPI(
@@ -349,4 +349,61 @@ def weather_stats(team: Optional[str] = Query(None)):
         ],
         incidents_with_weather_data=with_weather["total"],
         total_incidents=totals["total"],
+    )
+
+
+@app.get("/stats/timeofday", response_model=TimeOfDayStats)
+def time_of_day_stats(team: Optional[str] = Query(None)):
+    """
+    Distribution of incident start times across the day. OVMRO never
+    has a `time` value (its source only gives an operation duration,
+    not a start time), so this endpoint structurally excludes
+    Snowdonia — teams_with_time_data makes that explicit rather than
+    letting a chart imply all three regions are represented the way
+    they are everywhere else in the API.
+    """
+    conn = get_connection()
+    try:
+        params: list = []
+        where_clause = "WHERE time IS NOT NULL"
+        if team:
+            where_clause += " AND source_team_id = ?"
+            params.append(team)
+
+        rows = conn.execute(
+            f"SELECT CAST(substr(time, 1, 2) AS INTEGER) as hour, COUNT(*) as n "
+            f"FROM incidents {where_clause} "
+            f"GROUP BY hour ORDER BY hour",
+            params,
+        ).fetchall()
+
+        teams_rows = conn.execute(
+            f"SELECT DISTINCT source_team_id FROM incidents {where_clause}", params
+        ).fetchall()
+
+        totals = conn.execute(
+            f"SELECT COUNT(*) as total FROM incidents "
+            f"{'WHERE source_team_id = ?' if team else ''}",
+            [team] if team else [],
+        ).fetchone()
+        with_time = conn.execute(
+            f"SELECT COUNT(*) as total FROM incidents {where_clause}", params
+        ).fetchone()
+    finally:
+        conn.close()
+
+    # Fill every hour 0-23 explicitly, including zero-count ones, so the
+    # frontend gets a complete 24-point series rather than having to
+    # guess which hours are "genuinely zero" vs "missing from the response."
+    counts_by_hour = {r["hour"]: r["n"] for r in rows}
+    buckets = [
+        TimeOfDayBucket(hour=h, incident_count=counts_by_hour.get(h, 0))
+        for h in range(24)
+    ]
+
+    return TimeOfDayStats(
+        buckets=buckets,
+        incidents_with_time_data=with_time["total"],
+        total_incidents=totals["total"],
+        teams_with_time_data=sorted(r["source_team_id"] for r in teams_rows),
     )

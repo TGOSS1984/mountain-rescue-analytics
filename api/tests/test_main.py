@@ -403,3 +403,70 @@ def test_yearly_stats_filtered_by_team_shows_genuine_trend(yearly_client):
 
     assert set(body.keys()) == {"2023", "2024", "2026"}
     assert all(y["teams_reporting"] == ["edale"] for y in body.values())
+
+
+@pytest.fixture
+def timeofday_client(tmp_path, monkeypatch):
+    """OVMRO structurally never has a time value — this fixture must
+    prove the endpoint reflects that rather than silently including
+    Snowdonia as if it had (zero) time data like the others."""
+    db_path = tmp_path / "test_timeofday.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT
+        )
+    """)
+    rows = [
+        ("edale", "A", "2026-01-01", "14:30", "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("edale", "B", "2026-01-02", "14:45", "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("wasdale", "C", "2026-02-01", "09:15", "walking", "Alert", "stated_by_team",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("ovmro", "D", "2026-03-01", None, "climbing", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("ovmro", "E", "2026-03-02", None, "climbing", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+    ]
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_timeofday_excludes_ovmro_which_never_has_time_data(timeofday_client):
+    resp = timeofday_client.get("/stats/timeofday")
+    body = resp.json()
+
+    assert "ovmro" not in body["teams_with_time_data"]
+    assert set(body["teams_with_time_data"]) == {"edale", "wasdale"}
+    assert body["incidents_with_time_data"] == 3
+    assert body["total_incidents"] == 5
+
+
+def test_timeofday_returns_all_24_hours_including_zero_count(timeofday_client):
+    resp = timeofday_client.get("/stats/timeofday")
+    buckets = resp.json()["buckets"]
+
+    assert len(buckets) == 24
+    hour_9 = next(b for b in buckets if b["hour"] == 9)
+    hour_14 = next(b for b in buckets if b["hour"] == 14)
+    hour_3 = next(b for b in buckets if b["hour"] == 3)
+
+    assert hour_9["incident_count"] == 1
+    assert hour_14["incident_count"] == 2
+    assert hour_3["incident_count"] == 0
