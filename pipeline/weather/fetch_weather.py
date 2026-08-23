@@ -87,6 +87,10 @@ def fetch_region_weather(region, start_date, end_date):
     return resp.json()
 
 
+MIN_PLAUSIBLE_YEAR = 2010
+MAX_PLAUSIBLE_YEAR = 2035
+
+
 def main():
     cleaned_path = INTERIM_DIR / "incidents_cleaned.csv"
     if not cleaned_path.exists():
@@ -95,6 +99,27 @@ def main():
 
     df = pd.read_csv(cleaned_path)
     df["region"] = df["source_team_id"].map(TEAM_REGION)
+
+    # Second line of defence, independent of the plausibility check
+    # already applied during cleaning (clean_incidents.py). A bad date
+    # reaching this step would otherwise silently produce a garbage
+    # start_date/end_date range sent straight to Open-Meteo's API — on
+    # a real run this happened for real (a date parsed as year 0820 and
+    # another as year 2109), and the API correctly rejected the request
+    # with a 400, but only after crashing the whole pipeline run rather
+    # than skipping the bad row. Filtering here means one corrupted
+    # date can't take down the entire weather-fetching step.
+    valid_years = pd.to_datetime(df["date"], errors="coerce").dt.year
+    implausible = df["date"].notna() & (
+        valid_years.isna() | ~valid_years.between(MIN_PLAUSIBLE_YEAR, MAX_PLAUSIBLE_YEAR)
+    )
+    if implausible.any():
+        print(f"  WARNING: {implausible.sum()} row(s) have an implausible date "
+              f"(outside {MIN_PLAUSIBLE_YEAR}-{MAX_PLAUSIBLE_YEAR}) — excluding from the "
+              f"weather date-range calculation rather than letting them skew it:")
+        for _, row in df[implausible].iterrows():
+            print(f"    {row['source_team_id']} / {row['location_text']!r} -> date={row['date']!r}")
+        df.loc[implausible, "date"] = None
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -104,14 +104,44 @@ def parse_incident_number(text):
     return None
 
 
+# Sane bounds for a date this project could plausibly ever see — real
+# incidents span roughly the last decade to the present. Anything
+# outside this is almost certainly a mis-parsed accidental match deep
+# in a narrative (e.g. "since 1956" combined with an unrelated nearby
+# month name), not a real incident date, and gets rejected the same way
+# an unparseable string would be: left null, not trusted.
+MIN_PLAUSIBLE_YEAR = 2010
+MAX_PLAUSIBLE_YEAR = 2035
+
+
 def parse_date(text):
-    raw = _first_match(DATE_RE, text)
+    # Only search the opening of the text, not the whole narrative —
+    # the real date always appears in the first line or two ("Incident
+    # 95 – Tuesday 18th August 2026..."). Scanning the full narrative
+    # risked matching an unrelated date-shaped phrase buried in the
+    # story (confirmed on a real pipeline run: min/max dates came back
+    # as year 0820 and year 2109, neither of which is a real incident —
+    # something later in one or two narratives coincidentally matched
+    # the "day month year" pattern). Mirrors the same header-only
+    # restriction parse_time() already uses, for the same reason.
+    header = (text or "")[:200]
+    raw = _first_match(DATE_RE, header)
     if not raw:
         return None
     try:
-        return dateparser.parse(raw, dayfirst=True).date().isoformat()
+        parsed = dateparser.parse(raw, dayfirst=True).date()
     except (ValueError, OverflowError):
         return None
+
+    # Second line of defence: even a match within the header window
+    # should still fail a basic plausibility check rather than be
+    # trusted blindly — belt and braces, since a wrong date silently
+    # poisoning a weather join or a trend chart is a worse outcome than
+    # an occasional row left with no date at all.
+    if not (MIN_PLAUSIBLE_YEAR <= parsed.year <= MAX_PLAUSIBLE_YEAR):
+        return None
+
+    return parsed.isoformat()
 
 
 def parse_time(text):

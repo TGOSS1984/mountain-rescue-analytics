@@ -190,3 +190,30 @@ def test_wasdale_nbsp_between_callout_words_does_not_break_header_match():
 
     assert "\u00a0" not in text
     assert ENTRY_HEADER_RE.match(header_line) is not None
+
+
+def test_parse_date_rejects_implausible_year_from_narrative():
+    """
+    Regression test for a real bug found on a live pipeline run: a long
+    narrative mentioning an unrelated year deep in the text (the team's
+    founding year, a future planning date, etc.) was being picked up as
+    the incident date because parse_date searched the whole narrative.
+    Fixed by restricting the search to the opening of the text (where
+    the real date always lives) and rejecting anything outside a sane
+    year range as a second line of defence.
+    """
+    from clean_incidents import parse_date
+
+    long_narrative = (
+        "Incident 50 - Monday 12th May 2026, 1200hrs. The team was called to assist a "
+        "walker who had fallen near Kinder Scout. The team has operated in this area "
+        "since it was formed, marking a significant date 15 June 1956 as their founding, "
+        "and often cites 8 January 2109 as a symbolic future centenary marker."
+    )
+    assert parse_date(long_narrative) == "2026-05-12"
+
+    no_real_header = (
+        "The team responded to a callout. No formal date recorded here, but archives "
+        "mention 27 February 0820 as an unrelated historical curiosity."
+    )
+    assert parse_date(no_real_header) is None
