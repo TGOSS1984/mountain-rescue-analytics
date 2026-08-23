@@ -9,12 +9,13 @@ import YearlyChart from "./components/charts/YearlyChart.jsx";
 import TimeOfDayChart from "./components/charts/TimeOfDayChart.jsx";
 import ActivityChart from "./components/charts/ActivityChart.jsx";
 import NotableStats from "./components/regions/NotableStats.jsx";
+import TopLocations from "./components/regions/TopLocations.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
 import RegionPanel from "./components/regions/RegionPanel.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
 import {
   getStats, getMonthlyStats, getWeatherStats, getYearlyStats, getTimeOfDayStats,
-  getActivityBreakdown, getNotableStats, getRegions, getIncidents,
+  getActivityBreakdown, getNotableStats, getTopLocations, getRegions, getIncidents,
 } from "./api/client.js";
 import "./App.css";
 
@@ -83,6 +84,19 @@ export default function App() {
       .catch(() => setNotable(null))
       .finally(() => setNotableLoading(false));
   }, []);
+
+  // Unlike regions/activity/notable, top locations genuinely benefits
+  // from the region filter — "busiest in the Peak District" is a
+  // meaningful, different question from "busiest overall."
+  const [topLocations, setTopLocations] = useState([]);
+  const [topLocationsLoading, setTopLocationsLoading] = useState(true);
+  useEffect(() => {
+    setTopLocationsLoading(true);
+    getTopLocations({ team: filters.team || undefined, limit: 10 })
+      .then(setTopLocations)
+      .catch(() => setTopLocations([]))
+      .finally(() => setTopLocationsLoading(false));
+  }, [filters.team]);
 
   useEffect(() => {
     setMonthlyLoading(true);
@@ -203,6 +217,10 @@ export default function App() {
 
         <div className="container app__section">
           <NotableStats data={notable} loading={notableLoading} />
+        </div>
+
+        <div className="container app__section">
+          <TopLocations data={topLocations} loading={topLocationsLoading} />
         </div>
 
         <div className="container app__section">
