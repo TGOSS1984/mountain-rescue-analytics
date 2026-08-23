@@ -149,3 +149,29 @@ class ActivityBreakdownRow(BaseModel):
     region: str
     activity_type: str
     incident_count: int
+
+
+class NotableRecord(BaseModel):
+    location_text: str
+    date: Optional[str] = None
+    value: float
+    source_url: Optional[str] = None
+
+
+class NotableStats(BaseModel):
+    """
+    OVMRO's incident log is the only source that records operation
+    duration and team size — genuinely unused data otherwise, worth
+    surfacing. Deliberately excludes anything built from
+    casualties_count: turning a real operation (possibly involving
+    injury or worse) into a "record" would be poor taste regardless of
+    how factually accurate the number is. Longest operation and largest
+    deployment are shown as plain operational facts (location, duration,
+    date) with no narrative text, same as anywhere else these appear.
+    """
+    longest_operation: Optional[NotableRecord] = None  # value = duration_minutes
+    largest_deployment: Optional[NotableRecord] = None  # value = team_members_attended
+    total_operation_hours: float
+    average_team_size: Optional[float] = None
+    based_on_team: str
+    based_on_incident_count: int

@@ -528,3 +528,69 @@ def test_activity_breakdown_shows_regional_skew(activity_breakdown_client):
     assert edale_rows["climbing"] == 2
     assert ovmro_rows["climbing"] == 7
     assert ovmro_rows["walking"] == 1
+
+
+@pytest.fixture
+def notable_client(tmp_path, monkeypatch):
+    db_path = tmp_path / "test_notable.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT
+        )
+    """)
+    rows = [
+        ("ovmro", "Tryfan", "2026-01-01", None, "climbing", "x", "inferred_from_keywords",
+         "Narrative.", "https://ogwen-rescue.org.uk/1", None, None, "matched", None,
+         220, 1, 12, None, None, None, None, None),
+        ("ovmro", "Glyder Fach", "2026-02-01", None, "climbing", "x", "inferred_from_keywords",
+         "Narrative.", "https://ogwen-rescue.org.uk/2", None, None, "matched", None,
+         720, 2, 22, None, None, None, None, None),
+        ("ovmro", "Aber Falls", "2026-03-01", None, "walking", "x", "inferred_from_keywords",
+         "Narrative.", "https://ogwen-rescue.org.uk/3", None, None, "matched", None,
+         90, None, 25, None, None, None, None, None),
+        ("edale", "Kinder", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+         "Narrative.", "https://x.com", None, None, "matched", None,
+         None, None, None, None, None, None, None, None),
+    ]
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_notable_stats_correctness(notable_client):
+    resp = notable_client.get("/stats/notable")
+    body = resp.json()
+
+    assert body["longest_operation"]["location_text"] == "Glyder Fach"
+    assert body["longest_operation"]["value"] == 720.0
+    assert body["largest_deployment"]["location_text"] == "Aber Falls"
+    assert body["largest_deployment"]["value"] == 25.0
+    assert body["total_operation_hours"] == pytest.approx(17.2, abs=0.01)
+    assert body["based_on_incident_count"] == 3  # Edale row excluded, no duration data
+
+
+def test_notable_stats_never_includes_casualties(notable_client):
+    """
+    The core reason NotableRecord doesn't have a casualties field:
+    turning a real operation into a casualty-count 'record' would be
+    poor taste regardless of accuracy. This checks the raw response
+    text, not just the schema, so a future field addition can't
+    silently reintroduce it without this test catching it.
+    """
+    resp = notable_client.get("/stats/notable")
+    assert "casualt" not in resp.text.lower()
