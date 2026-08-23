@@ -594,3 +594,67 @@ def test_notable_stats_never_includes_casualties(notable_client):
     """
     resp = notable_client.get("/stats/notable")
     assert "casualt" not in resp.text.lower()
+
+
+@pytest.fixture
+def top_locations_client(tmp_path, monkeypatch):
+    db_path = tmp_path / "test_toploc.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT
+        )
+    """)
+    rows = []
+    def add(team, loc, n):
+        for i in range(n):
+            rows.append((team, loc, "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+                         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None))
+    add("edale", "Kinder Scout", 12)
+    add("edale", "Stanage Edge", 9)
+    add("edale", "Kinder", 5)
+    add("ovmro", "Tryfan", 15)
+    add("wasdale", "Scafell Pike", 20)
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_top_locations_ordering_and_limit(top_locations_client):
+    resp = top_locations_client.get("/stats/top-locations?limit=3")
+    body = resp.json()
+
+    assert len(body) == 3
+    assert body[0]["location_text"] == "Scafell Pike"
+    assert body[0]["incident_count"] == 20
+    assert body[1]["location_text"] == "Tryfan"
+    assert body[2]["location_text"] == "Kinder Scout"
+
+
+def test_top_locations_keeps_near_duplicates_separate(top_locations_client):
+    """
+    Documents the known limitation directly: "Kinder Scout" and
+    "Kinder" are the same real place but stay as two entries, since
+    this endpoint does raw-text frequency counting, not gazetteer
+    matching.
+    """
+    resp = top_locations_client.get("/stats/top-locations?limit=10")
+    locations = {r["location_text"]: r["incident_count"] for r in resp.json()}
+
+    assert locations["Kinder Scout"] == 12
+    assert locations["Kinder"] == 5
+    assert "Kinder Scout" != "Kinder"  # sanity — they really are separate keys

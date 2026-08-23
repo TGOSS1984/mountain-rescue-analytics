@@ -17,7 +17,7 @@ from database import get_connection
 from models import (
     Incident, IncidentList, OverallStats, RegionSummary, MonthlySummary,
     YearlySummary, WeatherStats, WeatherBreakdown, TimeOfDayStats, TimeOfDayBucket,
-    ActivityBreakdownRow, NotableStats, NotableRecord,
+    ActivityBreakdownRow, NotableStats, NotableRecord, TopLocation,
 )
 
 app = FastAPI(
@@ -485,3 +485,38 @@ def notable_stats():
         based_on_team="ovmro",
         based_on_incident_count=aggregates["n"] or 0,
     )
+
+
+@app.get("/stats/top-locations", response_model=list[TopLocation])
+def top_locations(limit: int = Query(10, ge=1, le=50), team: Optional[str] = Query(None)):
+    """
+    Simple raw-frequency leaderboard — see TopLocation's docstring for
+    why near-duplicate place names ("Kinder" vs "Kinder Scout") aren't
+    collapsed together here.
+    """
+    conn = get_connection()
+    try:
+        params: list = []
+        where_clause = "WHERE location_text IS NOT NULL AND location_text != ''"
+        if team:
+            where_clause += " AND source_team_id = ?"
+            params.append(team)
+
+        rows = conn.execute(
+            f"SELECT location_text, source_team_id, COUNT(*) as n FROM incidents "
+            f"{where_clause} GROUP BY location_text, source_team_id "
+            f"ORDER BY n DESC LIMIT ?",
+            params + [limit],
+        ).fetchall()
+    finally:
+        conn.close()
+
+    return [
+        TopLocation(
+            location_text=r["location_text"],
+            region=TEAM_REGION.get(r["source_team_id"], "Unknown"),
+            source_team_id=r["source_team_id"],
+            incident_count=r["n"],
+        )
+        for r in rows
+    ]

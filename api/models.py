@@ -175,3 +175,19 @@ class NotableStats(BaseModel):
     average_team_size: Optional[float] = None
     based_on_team: str
     based_on_incident_count: int
+
+
+class TopLocation(BaseModel):
+    """
+    Raw frequency count on location_text as published — no fuzzy
+    matching or normalisation attempted. "Kinder Scout", "Kinder", and
+    "Kinder southern edge" are geographically close but count as three
+    separate entries here, not one. That's an honest limitation worth
+    knowing rather than a bug: collapsing near-duplicate place names
+    reliably would need real gazetteer matching, which this project
+    doesn't attempt. See docs/data-dictionary.md.
+    """
+    location_text: str
+    region: str
+    source_team_id: str
+    incident_count: int
