@@ -131,18 +131,47 @@ def get_incident(incident_id: int):
     return _row_to_incident(row)
 
 
-@app.get("/regions", response_model=list[RegionSummary])
-def list_regions():
-    conn = get_connection()
-    try:
-        rows = conn.execute(
-            "SELECT source_team_id, "
-            "       COUNT(*) as incident_count, "
-            "       SUM(CASE WHEN geocode_status = 'matched' THEN 1 ELSE 0 END) as geocoded_count "
-            "FROM incidents GROUP BY source_team_id"
-        ).fetchall()
-    finally:
-        conn.close()
+def _get_region_summaries(conn) -> list[RegionSummary]:
+    """
+    Shared by both /regions and /stats so the two endpoints can't
+    silently drift apart on how a region summary is computed.
+    """
+    rows = conn.execute(
+        "SELECT source_team_id, "
+        "       COUNT(*) as incident_count, "
+        "       SUM(CASE WHEN geocode_status = 'matched' THEN 1 ELSE 0 END) as geocoded_count "
+        "FROM incidents GROUP BY source_team_id"
+    ).fetchall()
+
+    top_activity_rows = conn.execute(
+        "SELECT source_team_id, activity_type, COUNT(*) as n FROM incidents "
+        "GROUP BY source_team_id, activity_type"
+    ).fetchall()
+
+    outcome_source_rows = conn.execute(
+        "SELECT source_team_id, outcome_source, COUNT(*) as n FROM incidents "
+        "GROUP BY source_team_id, outcome_source"
+    ).fetchall()
+
+    top_activity = {}
+    activity_counts = {}
+    for r in top_activity_rows:
+        team = r["source_team_id"]
+        if team not in activity_counts or r["n"] > activity_counts[team]:
+            activity_counts[team] = r["n"]
+            top_activity[team] = r["activity_type"]
+
+    outcome_sources_by_team = {}
+    for r in outcome_source_rows:
+        outcome_sources_by_team.setdefault(r["source_team_id"], set()).add(r["outcome_source"])
+
+    def _outcome_data_source(team):
+        sources = outcome_sources_by_team.get(team, set())
+        if sources == {"stated_by_team"}:
+            return "stated_by_team"
+        if sources == {"inferred_from_keywords"}:
+            return "inferred_from_keywords"
+        return "mixed"
 
     return [
         RegionSummary(
@@ -150,9 +179,21 @@ def list_regions():
             region=TEAM_REGION.get(r["source_team_id"], "Unknown"),
             incident_count=r["incident_count"],
             geocoded_count=r["geocoded_count"],
+            geocode_match_rate=round(r["geocoded_count"] / r["incident_count"], 3) if r["incident_count"] else 0.0,
+            top_activity_type=top_activity.get(r["source_team_id"]),
+            outcome_data_source=_outcome_data_source(r["source_team_id"]),
         )
         for r in rows
     ]
+
+
+@app.get("/regions", response_model=list[RegionSummary])
+def list_regions():
+    conn = get_connection()
+    try:
+        return _get_region_summaries(conn)
+    finally:
+        conn.close()
 
 
 @app.get("/stats", response_model=OverallStats)
@@ -166,12 +207,7 @@ def overall_stats():
             "FROM incidents"
         ).fetchone()
 
-        region_rows = conn.execute(
-            "SELECT source_team_id, "
-            "       COUNT(*) as incident_count, "
-            "       SUM(CASE WHEN geocode_status = 'matched' THEN 1 ELSE 0 END) as geocoded_count "
-            "FROM incidents GROUP BY source_team_id"
-        ).fetchall()
+        region_rows = _get_region_summaries(conn)
     finally:
         conn.close()
 
@@ -184,15 +220,7 @@ def overall_stats():
         geocode_match_rate=round(geocoded / total, 3) if total else 0.0,
         date_range_start=totals["start_date"],
         date_range_end=totals["end_date"],
-        regions=[
-            RegionSummary(
-                source_team_id=r["source_team_id"],
-                region=TEAM_REGION.get(r["source_team_id"], "Unknown"),
-                incident_count=r["incident_count"],
-                geocoded_count=r["geocoded_count"],
-            )
-            for r in region_rows
-        ],
+        regions=region_rows,
     )
 
 

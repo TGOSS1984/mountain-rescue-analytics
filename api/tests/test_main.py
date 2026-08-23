@@ -243,3 +243,91 @@ def test_weather_stats_excludes_rows_without_weather_data(weather_client):
     body = resp.json()
     assert body["total_incidents"] == 6
     assert body["incidents_with_weather_data"] == 5
+
+
+@pytest.fixture
+def region_comparison_client(tmp_path, monkeypatch):
+    """Mirrors the real data-quality split: Wasdale states outcomes
+    directly, Edale and OVMRO don't — the region comparison must keep
+    this distinction visible rather than blending it."""
+    db_path = tmp_path / "test_regions.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT
+        )
+    """)
+    rows = [
+        ("edale", "A", "2026-01-01", None, "walking", "unrecorded", "inferred_from_keywords",
+         None, None, 53.3, -1.8, "matched", None, None, None, None, None, None, None, None, None),
+        ("edale", "B", "2026-01-02", None, "walking", "unrecorded", "inferred_from_keywords",
+         None, None, None, None, "no_match", None, None, None, None, None, None, None, None, None),
+        ("edale", "C", "2026-01-03", None, "climbing", "unrecorded", "inferred_from_keywords",
+         None, None, 53.3, -1.8, "matched", None, None, None, None, None, None, None, None, None),
+        ("wasdale", "D", "2026-02-01", None, "walking", "Full Callout", "stated_by_team",
+         None, None, 54.4, -3.2, "matched", None, None, None, None, None, None, None, None, None),
+        ("wasdale", "E", "2026-02-02", None, "walking", "Alert", "stated_by_team",
+         None, None, 54.4, -3.2, "matched", None, None, None, None, None, None, None, None, None),
+        ("ovmro", "F", "2026-03-01", None, "climbing", "unrecorded", "inferred_from_keywords",
+         None, None, 53.1, -4.0, "matched", None, None, None, None, None, None, None, None, None),
+        ("ovmro", "G", "2026-03-02", None, "climbing", "unrecorded", "inferred_from_keywords",
+         None, None, 53.1, -4.0, "matched", None, None, None, None, None, None, None, None, None),
+    ]
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_region_top_activity_differs_correctly(region_comparison_client):
+    resp = region_comparison_client.get("/regions")
+    body = {r["source_team_id"]: r for r in resp.json()}
+
+    assert body["edale"]["top_activity_type"] == "walking"
+    assert body["ovmro"]["top_activity_type"] == "climbing"
+
+
+def test_region_outcome_data_source_not_blended(region_comparison_client):
+    """
+    The core thing this field exists to prevent: Wasdale's real,
+    team-stated severity data must not be reported the same way as
+    Edale/OVMRO's keyword-guessed outcomes — that would misrepresent
+    uneven data quality as if it were consistent across regions.
+    """
+    resp = region_comparison_client.get("/regions")
+    body = {r["source_team_id"]: r for r in resp.json()}
+
+    assert body["wasdale"]["outcome_data_source"] == "stated_by_team"
+    assert body["edale"]["outcome_data_source"] == "inferred_from_keywords"
+    assert body["ovmro"]["outcome_data_source"] == "inferred_from_keywords"
+
+
+def test_region_geocode_match_rate_computed_correctly(region_comparison_client):
+    resp = region_comparison_client.get("/regions")
+    body = {r["source_team_id"]: r for r in resp.json()}
+
+    # edale: 2 matched out of 3
+    assert body["edale"]["geocode_match_rate"] == pytest.approx(0.667, abs=0.001)
+    assert body["wasdale"]["geocode_match_rate"] == 1.0
+
+
+def test_stats_and_regions_endpoints_agree(region_comparison_client):
+    """/stats embeds the same region summaries as /regions — they share
+    one code path now specifically so they can't drift apart."""
+    stats_regions = {r["source_team_id"]: r for r in region_comparison_client.get("/stats").json()["regions"]}
+    direct_regions = {r["source_team_id"]: r for r in region_comparison_client.get("/regions").json()}
+
+    assert stats_regions == direct_regions

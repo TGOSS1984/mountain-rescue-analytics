@@ -78,6 +78,17 @@ class RegionSummary(BaseModel):
     region: str
     incident_count: int
     geocoded_count: int
+    geocode_match_rate: float
+    top_activity_type: Optional[str] = None
+    # Whether this region's `outcome` field is a real, team-stated
+    # severity (currently only Wasdale) or my own keyword guess
+    # (everyone else). Deliberately NOT collapsed into a single
+    # "severity rate" comparable across regions — a "Full Callout %"
+    # for Wasdale and an "air_ambulance %" for Edale/OVMRO aren't the
+    # same measurement, and presenting them side by side as if they
+    # were would misrepresent data quality that's actually uneven.
+    # See docs/data-dictionary.md.
+    outcome_data_source: str
 
 
 class MonthlySummary(BaseModel):
