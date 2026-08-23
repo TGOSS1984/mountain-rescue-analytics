@@ -47,4 +47,10 @@
   --color-chart-4: #4472a8;
   --color-chart-5: #8c6a9e;
   --color-chart-6: var(--color-slate);
+  /* Added for the weather chart's "snow" category — none of the six
+     above read as cold/icy with enough contrast against a white card
+     (the mist/mist-soft background tones were tried first and were
+     nearly invisible). A distinct pale blue reads as snow/ice without
+     blending into the page. */
+  --color-chart-7: #7fa8c9;
 }

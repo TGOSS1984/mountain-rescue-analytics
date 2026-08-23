@@ -21,12 +21,12 @@ const WEATHER_LABELS = {
 };
 
 const WEATHER_COLORS = {
-  clear: "#F2C14E",
-  cloudy: "#98A1A8",
-  rain: "#4472A8",
-  snow: "#EDEFEA",
-  storm: "#E8541E",
-  other: "#5B6670",
+  clear: "var(--color-chart-3)",
+  cloudy: "var(--color-chart-6)",
+  rain: "var(--color-chart-4)",
+  snow: "var(--color-chart-7)",
+  storm: "var(--color-chart-1)",
+  other: "var(--color-chart-2)",
 };
 
 /**
@@ -109,7 +109,12 @@ export default function WeatherChart({ data, loading }) {
             <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
             <Bar dataKey="incidentsPerDay" radius={[2, 2, 0, 0]}>
               {chartData.map((d) => (
-                <Cell key={d.condition} fill={WEATHER_COLORS[d.condition] || "#5B6670"} />
+                <Cell
+                  key={d.condition}
+                  fill={WEATHER_COLORS[d.condition] || WEATHER_COLORS.other}
+                  stroke="var(--color-border)"
+                  strokeWidth={1}
+                />
               ))}
             </Bar>
           </BarChart>
