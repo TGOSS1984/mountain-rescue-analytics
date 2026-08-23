@@ -28,6 +28,11 @@ export function getMonthlyStats(team) {
   return request(`/stats/monthly${query}`);
 }
 
+export function getWeatherStats(team) {
+  const query = team ? `?team=${encodeURIComponent(team)}` : "";
+  return request(`/stats/weather${query}`);
+}
+
 export function getRegions() {
   return request("/regions");
 }
