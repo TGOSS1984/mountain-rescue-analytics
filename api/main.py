@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import get_connection
 from models import (
     Incident, IncidentList, OverallStats, RegionSummary, MonthlySummary,
-    WeatherStats, WeatherBreakdown,
+    YearlySummary, WeatherStats, WeatherBreakdown,
 )
 
 app = FastAPI(
@@ -246,6 +246,47 @@ def monthly_stats(team: Optional[str] = Query(None)):
         conn.close()
 
     return [MonthlySummary(month=r["month"], incident_count=r["incident_count"]) for r in rows]
+
+
+@app.get("/stats/yearly", response_model=list[YearlySummary])
+def yearly_stats(team: Optional[str] = Query(None)):
+    """
+    Multi-year trend. Genuinely different data than /stats/monthly's
+    seasonal pattern — Edale's REST API returned its full posting
+    history, not just this year, so this can show real year-over-year
+    change for that team. Wasdale and OVMRO's scrapers only pulled
+    their current reporting page, so their data is effectively
+    single-year — teams_reporting on each row is what lets the frontend
+    show that honestly rather than implying a real trend where the real
+    story is "another team started reporting."
+    """
+    conn = get_connection()
+    try:
+        params: list = []
+        where_clause = "WHERE date IS NOT NULL"
+        if team:
+            where_clause += " AND source_team_id = ?"
+            params.append(team)
+
+        rows = conn.execute(
+            f"SELECT substr(date, 1, 4) as year, source_team_id, COUNT(*) as n "
+            f"FROM incidents {where_clause} "
+            f"GROUP BY year, source_team_id ORDER BY year",
+            params,
+        ).fetchall()
+    finally:
+        conn.close()
+
+    by_year: dict = {}
+    for r in rows:
+        entry = by_year.setdefault(r["year"], {"count": 0, "teams": set()})
+        entry["count"] += r["n"]
+        entry["teams"].add(r["source_team_id"])
+
+    return [
+        YearlySummary(year=year, incident_count=data["count"], teams_reporting=sorted(data["teams"]))
+        for year, data in sorted(by_year.items())
+    ]
 
 
 @app.get("/stats/weather", response_model=WeatherStats)

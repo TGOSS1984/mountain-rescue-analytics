@@ -331,3 +331,75 @@ def test_stats_and_regions_endpoints_agree(region_comparison_client):
     direct_regions = {r["source_team_id"]: r for r in region_comparison_client.get("/regions").json()}
 
     assert stats_regions == direct_regions
+
+
+@pytest.fixture
+def yearly_client(tmp_path, monkeypatch):
+    """Mirrors the real coverage gap: Edale has genuine multi-year
+    history, Wasdale/OVMRO only exist in the most recent year — the
+    yearly endpoint must surface this, not hide it behind a misleading
+    combined total."""
+    db_path = tmp_path / "test_yearly.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT
+        )
+    """)
+    rows = [
+        ("edale", "A", "2023-01-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("edale", "B", "2024-01-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("edale", "C", "2024-06-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("edale", "D", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("wasdale", "E", "2026-02-01", None, "walking", "Alert", "stated_by_team",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+        ("ovmro", "F", "2026-03-01", None, "climbing", "x", "inferred_from_keywords",
+         None, None, None, None, "matched", None, None, None, None, None, None, None, None, None),
+    ]
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_yearly_stats_surfaces_coverage_gap_not_just_totals(yearly_client):
+    """
+    The core reason teams_reporting exists: a jump from 2 incidents in
+    2024 to 3 in 2026 must be explainable as "a new team started
+    reporting," not misread as a real 50% increase in incidents.
+    """
+    resp = yearly_client.get("/stats/yearly")
+    body = {y["year"]: y for y in resp.json()}
+
+    assert body["2023"]["teams_reporting"] == ["edale"]
+    assert body["2024"]["teams_reporting"] == ["edale"]
+    assert body["2024"]["incident_count"] == 2
+    assert sorted(body["2026"]["teams_reporting"]) == ["edale", "ovmro", "wasdale"]
+    assert body["2026"]["incident_count"] == 3
+
+
+def test_yearly_stats_filtered_by_team_shows_genuine_trend(yearly_client):
+    """Filtering to a single team removes the coverage-gap issue
+    entirely — this is the "genuine long-term trend" view."""
+    resp = yearly_client.get("/stats/yearly?team=edale")
+    body = {y["year"]: y for y in resp.json()}
+
+    assert set(body.keys()) == {"2023", "2024", "2026"}
+    assert all(y["teams_reporting"] == ["edale"] for y in body.values())

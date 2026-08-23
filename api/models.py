@@ -96,6 +96,19 @@ class MonthlySummary(BaseModel):
     incident_count: int
 
 
+class YearlySummary(BaseModel):
+    year: str  # YYYY
+    incident_count: int
+    # Which teams have data for this year — matters because only Edale's
+    # REST API returned genuine multi-year history; Wasdale and OVMRO's
+    # scrapers only pulled their current reporting page (this year only).
+    # Without this, a combined "all regions" yearly trend would show an
+    # apparent surge in the current year that's actually just three
+    # teams reporting instead of one — a coverage artifact, not a real
+    # change in incident rates. See docs/data-dictionary.md.
+    teams_reporting: list[str]
+
+
 class OverallStats(BaseModel):
     total_incidents: int
     geocoded_incidents: int
