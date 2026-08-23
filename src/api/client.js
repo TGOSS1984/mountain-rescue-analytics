@@ -33,6 +33,11 @@ export function getWeatherStats(team) {
   return request(`/stats/weather${query}`);
 }
 
+export function getYearlyStats(team) {
+  const query = team ? `?team=${encodeURIComponent(team)}` : "";
+  return request(`/stats/yearly${query}`);
+}
+
 export function getRegions() {
   return request("/regions");
 }
