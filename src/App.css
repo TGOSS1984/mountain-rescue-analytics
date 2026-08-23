@@ -2,6 +2,19 @@
   padding: var(--space-8) 0;
 }
 
+.app__insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .app__insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .app__section--last {
   padding-bottom: var(--space-10);
 }

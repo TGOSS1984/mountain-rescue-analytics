@@ -3,9 +3,10 @@ import Header from "./components/layout/Header.jsx";
 import Hero from "./components/layout/Hero.jsx";
 import Filters from "./components/filters/Filters.jsx";
 import MonthlyChart from "./components/charts/MonthlyChart.jsx";
+import WeatherChart from "./components/charts/WeatherChart.jsx";
 import IncidentMap from "./components/map/IncidentMap.jsx";
 import IncidentCard from "./components/incidents/IncidentCard.jsx";
-import { getStats, getMonthlyStats, getIncidents } from "./api/client.js";
+import { getStats, getMonthlyStats, getWeatherStats, getIncidents } from "./api/client.js";
 import "./App.css";
 
 const DEFAULT_FILTERS = { team: "", activityType: "", geocodedOnly: false };
@@ -20,6 +21,9 @@ export default function App() {
 
   const [monthly, setMonthly] = useState([]);
   const [monthlyLoading, setMonthlyLoading] = useState(true);
+
+  const [weather, setWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
 
   const [incidents, setIncidents] = useState([]);
   const [incidentsTotal, setIncidentsTotal] = useState(0);
@@ -42,6 +46,14 @@ export default function App() {
       .then(setMonthly)
       .catch(() => setMonthly([]))
       .finally(() => setMonthlyLoading(false));
+  }, [filters.team]);
+
+  useEffect(() => {
+    setWeatherLoading(true);
+    getWeatherStats(filters.team || undefined)
+      .then(setWeather)
+      .catch(() => setWeather(null))
+      .finally(() => setWeatherLoading(false));
   }, [filters.team]);
 
   const loadIncidents = useCallback(
@@ -107,8 +119,9 @@ export default function App() {
           <Filters value={filters} onChange={setFilters} />
         </div>
 
-        <div className="container app__section">
+        <div className="container app__section app__insights-grid">
           <MonthlyChart data={monthly} loading={monthlyLoading} />
+          <WeatherChart data={weather} loading={weatherLoading} />
         </div>
 
         <div className="container app__section" id="regions">
