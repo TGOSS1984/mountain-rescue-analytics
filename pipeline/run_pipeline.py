@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent / "clean"))
 sys.path.insert(0, str(Path(__file__).parent / "validate"))
 sys.path.insert(0, str(Path(__file__).parent / "weather"))
 sys.path.insert(0, str(Path(__file__).parent / "geocode"))
+sys.path.insert(0, str(Path(__file__).parent / "elevation"))
 sys.path.insert(0, str(Path(__file__).parent / "warehouse"))
 
 import pandas as pd
@@ -37,19 +38,19 @@ def main():
 
     print("=" * 60)
     if not args.skip_scrape:
-        print("STEP 1/6 — scraping team incident logs")
+        print("STEP 1/7 — scraping team incident logs")
         import scrape_team_incidents
         scrape_team_incidents.main()
     else:
-        print("STEP 1/6 — skipped (--skip-scrape), using existing raw data")
+        print("STEP 1/7 — skipped (--skip-scrape), using existing raw data")
 
     print("=" * 60)
-    print("STEP 2/6 — cleaning and standardising")
+    print("STEP 2/7 — cleaning and standardising")
     import clean_incidents
     clean_incidents.main()
 
     print("=" * 60)
-    print("STEP 3/6 — validating against schema")
+    print("STEP 3/7 — validating against schema")
     import schema
     interim_path = Path(__file__).parent / "data" / "interim" / "incidents_cleaned.csv"
     df = pd.read_csv(interim_path)
@@ -63,19 +64,24 @@ def main():
         sys.exit(1)
 
     print("=" * 60)
-    print("STEP 4/6 — fetching and joining regional weather")
+    print("STEP 4/7 — fetching and joining regional weather")
     import fetch_weather
     import join_weather
     fetch_weather.main()
     join_weather.main()
 
     print("=" * 60)
-    print("STEP 5/6 — geocoding locations")
+    print("STEP 5/7 — geocoding locations")
     import geocode_locations
     geocode_locations.main()
 
     print("=" * 60)
-    print("STEP 6/6 — building SQLite warehouse")
+    print("STEP 6/7 — fetching terrain elevation")
+    import fetch_elevation
+    fetch_elevation.main()
+
+    print("=" * 60)
+    print("STEP 7/7 — building SQLite warehouse")
     import build_warehouse
     build_warehouse.build()
 
