@@ -39,6 +39,34 @@ Having Edale (Peak District), Wasdale (Lake District), and OVMRO (Snowdonia) tog
 | `lat` / `lon` | Geocoded from `location_text` via Nominatim (OpenStreetMap), biased to a Peak District bounding box | Varies — see `geocode_confidence` |
 | `geocode_confidence` | "high" if Nominatim's match type is a natural feature (peak, hill, water); "low" otherwise | Nominatim doesn't return a numeric confidence score, so this is a derived proxy, not a native field |
 | `geocode_status` | "matched", "no_match", or "skipped" (empty location text) | — |
+| `temp_max_c` / `temp_min_c` / `precipitation_mm` / `wind_speed_max_kmh` | Historical daily weather from Open-Meteo, matched on (region, date) | One reading shared by every incident in that region on that day — see "Weather is regional, not per-incident" below |
+| `weather_summary` | Open-Meteo's WMO weather code, collapsed into a handful of readable buckets (clear/cloudy/rain/snow/storm/other) | A simplification for charting — see `pipeline/weather/join_weather.py`'s `WEATHERCODE_BUCKETS` for the exact mapping |
+| `daylight_status` | "daylight" or "darkness", from comparing the incident's recorded time against that day's sunrise/sunset | Only computable where both a parsed time and a weather match exist. Always null for OVMRO, which never records a start time at all |
+| `elevation_m` | Terrain elevation at the geocoded coordinate, from Open-Meteo's elevation API | Null wherever `lat`/`lon` are null. Deduplicated and cached — two incidents at the same named peak cost one lookup, not two |
+| `is_bank_holiday` | Whether the date was a UK bank holiday (England & Wales division), from gov.uk's bank holidays API | Null for dates outside the range that API actually publishes (a rolling few years) — see "Bank holidays don't cover the full date range" below. Not the same as `False` |
+| `day_of_week` / `is_weekend` | Derived directly from `date` | High confidence wherever a date exists — no external dependency, unlike `is_bank_holiday` |
+
+## Weather is regional, not per-incident
+
+Weather is joined per region per day, using one fixed reference point per region (roughly the geographic centre of where each team operates), not each incident's own coordinates. Two incidents on the same day, one at Kinder Scout and one at Stanage Edge, get identical weather readings. That's a deliberate simplification: it's accurate enough for "was it a wet week" analysis, but it's regional daily weather, not a precise per-incident reading, and the weather chart's own copy says so rather than implying more precision than the data actually has.
+
+## Bank holidays don't cover the full date range
+
+Gov.uk's bank holidays API only publishes a rolling window of a few years, not a full historical archive — and Edale's incident history goes back to 2014. A date outside that published range gets `is_bank_holiday = null`, not `false`. Marking it `false` would be a guess dressed up as a fact: the API genuinely doesn't say either way for those years, and the pipeline says so rather than assuming "probably not a holiday" and moving on.
+
+## Why Scotland isn't in this dataset
+
+I looked into this properly rather than assuming it wasn't possible. Scottish Mountain Rescue, the umbrella body, publishes the same kind of thing Mountain Rescue England & Wales does — annual aggregate PDF statistics, not row-level incident records, so it was never going to work for this project regardless of region.
+
+The more interesting finding was at team level. I checked Cairngorm, Lochaber (which covers Ben Nevis and Glencoe), Glencoe MRT directly, and Arran MRT — the classic, well-known Highland teams, exactly the ones you'd expect to have the richest data. None of them publish a structured incident log on their own website the way Edale, Wasdale, and OVMRO do:
+
+- **Lochaber's** website has three pages total — home, about the team, how to support us — and explicitly points people to Facebook and Instagram for updates.
+- **Cairngorm's** `/blog` is real, but it's equipment donations, training days, and partnership announcements. Their actual callout narratives live on X.
+- **Glencoe** and **Arran** follow the same pattern — Arran posts numbered callouts, but only to X, never their own site.
+
+I did consider scraping X for one of these teams, since Arran's posts are genuinely structured (numbered, dated, with a narrative — similar shape to what I already had). I decided against it. X requires authentication now, the API costs money, and unauthenticated scraping is fragile and against their terms of service — a fundamentally different and riskier kind of problem than politely fetching a public webpage, which is what every other source in this project does.
+
+**Moffat Mountain Rescue Team** (Southern Uplands — Dumfries and the Scottish Borders, not the Highlands) is the one Scottish team I found with a genuine website incident archive, a WordPress `/news/` page with real dated callout posts. It's not currently included, mainly because it isn't the "proper Highlands" data most people would picture when they hear "Scottish mountain rescue," and because unlike the other three sources, Moffat's news feed mixes real callouts with unrelated posts (award announcements, fundraising, recruitment), which would need a filtering step none of the current sources require. It's a legitimate future addition, just not the same one-to-one fit as the other three.
 
 ## What gets dropped, and why
 
@@ -65,10 +93,13 @@ legitimately different rows.
   larger version of this project, a proper text classification model
   would be a natural next step — documented here rather than pretended
   away.
-- **Coverage is currently one confirmed team (Edale) plus placeholders
-  for others.** The "multi-team, multi-region" version of this dataset
-  depends on checking each new team's site structure individually — see
-  below.
+- **Coverage is three teams across three regions (Peak District, Lake
+  District, Snowdonia), plus Buxton identified but not yet wired in.**
+  Scotland was investigated and deliberately excluded — see "Why
+  Scotland isn't in this dataset" above. Adding a fourth region depends
+  on finding a team whose site actually publishes a structured incident
+  log, which turned out to be the real bottleneck, not the scraping
+  itself — see below.
 
 ## Adding a new source
 
