@@ -1,7 +1,46 @@
 .hero {
+  position: relative;
   background: var(--color-ink);
   color: var(--color-mist-soft);
   padding: var(--space-10) 0 var(--space-8);
+  overflow: hidden;
+}
+
+/* The illustration itself — sits behind everything, positioned toward
+   the right since that's the side meant to stay most visible. */
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+/* The "glass" — a blurred, gradient scrim over the illustration.
+   Opaque enough on the left for the text to stay comfortably
+   readable, clearing progressively toward the right so the
+   illustration actually reads as an illustration rather than being
+   fully hidden. backdrop-filter is what gives this the frosted-glass
+   quality rather than a flat colour wash — it blurs whatever's behind
+   it, not just dims it. */
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  background: linear-gradient(
+    to right,
+    rgba(26, 36, 48, 0.94) 0%,
+    rgba(26, 36, 48, 0.88) 30%,
+    rgba(26, 36, 48, 0.62) 60%,
+    rgba(26, 36, 48, 0.32) 100%
+  );
+}
+
+.hero__content {
+  position: relative;
+  z-index: 2;
 }
 
 .hero__eyebrow {

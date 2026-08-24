@@ -1,14 +1,23 @@
+import heroImage from "../../assets/hero/hero-background.jpg";
 import "./Hero.css";
 
 /**
  * Hero stats are driven by the real /stats response, not hardcoded —
  * this is a live dashboard reflecting whatever the pipeline last
  * produced, not a mockup with placeholder numbers baked in.
+ *
+ * Background is a real photo (src/assets/hero/hero-background.jpg),
+ * layered under a blurred, gradient scrim: solid enough on the left
+ * for the text to stay readable, progressively clearer toward the
+ * right so the photo actually shows through rather than being hidden
+ * entirely. See Hero.css for the actual layering.
  */
 export default function Hero({ stats, loading, error }) {
   return (
     <section className="hero">
-      <div className="container">
+      <div className="hero__bg" style={{ backgroundImage: `url(${heroImage})` }} aria-hidden="true" />
+      <div className="hero__scrim" aria-hidden="true" />
+      <div className="container hero__content">
         <p className="eyebrow hero__eyebrow">Real callout data, three regions</p>
         <h1 className="hero__title">
           Real callouts. Real weather.
