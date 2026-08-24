@@ -151,16 +151,26 @@ def test_overall_stats(client):
 
 
 def test_monthly_stats(client):
+    """Updated for the calendar-month redesign: always 12 rows, and the
+    fixture's 2026-02/2026-03 dates now fall into month buckets "02"
+    and "03" respectively, combined across whatever years exist (here,
+    just one)."""
     resp = client.get("/stats/monthly")
     body = resp.json()
-    months = {m["month"]: m["incident_count"] for m in body}
-    assert months == {"2026-02": 1, "2026-03": 3}
+    assert len(body) == 12
+    counts = {m["month"]: m["incident_count"] for m in body}
+    assert counts["02"] == 1
+    assert counts["03"] == 3
+    assert counts["01"] == 0  # present with zero, not omitted
 
 
 def test_monthly_stats_filtered_by_team(client):
     resp = client.get("/stats/monthly?team=ovmro")
     body = resp.json()
-    assert body == [{"month": "2026-02", "incident_count": 1}]
+    assert len(body) == 12
+    counts = {m["month"]: m["incident_count"] for m in body}
+    assert counts["02"] == 1
+    assert counts["03"] == 0
 
 
 def test_pagination_limit_and_offset(client):
@@ -812,3 +822,64 @@ def test_bank_holiday_uses_per_day_average_not_raw_total(dow_holiday_client):
     assert body["avg_incidents_per_ordinary_day"] == 2.0
     assert body["bank_holiday_days_observed"] == 1
     assert body["ordinary_days_observed"] == 3
+
+
+@pytest.fixture
+def monthly_seasonal_client(tmp_path, monkeypatch):
+    """Same scenario that broke the old year-and-month version: several
+    years of data, August consistently busy, February consistently quiet."""
+    db_path = tmp_path / "test_monthly_seasonal.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE incidents (
+            source_team_id TEXT, location_text TEXT, date TEXT, time TEXT,
+            activity_type TEXT, outcome TEXT, outcome_source TEXT,
+            narrative_raw TEXT, source_url TEXT, lat REAL, lon REAL,
+            geocode_status TEXT, geocode_confidence TEXT,
+            duration_minutes REAL, casualties_count REAL, team_members_attended REAL,
+            temp_max_c REAL, temp_min_c REAL, precipitation_mm REAL,
+            wind_speed_max_kmh REAL, weather_summary TEXT, daylight_status TEXT, elevation_m REAL,
+            is_bank_holiday INTEGER, day_of_week TEXT, is_weekend INTEGER
+        )
+    """)
+    rows = []
+    for year in [2015, 2018, 2020, 2022, 2024, 2026]:
+        for i in range(8):
+            rows.append(("edale", "Loc", f"{year}-08-{i+1:02d}", None, "walking", "x",
+                         "inferred_from_keywords", None, None, None, None, "matched", None,
+                         None, None, None, None, None, None, None, None, None, None, None, None, None))
+        for i in range(2):
+            rows.append(("edale", "Loc", f"{year}-02-{i+1:02d}", None, "walking", "x",
+                         "inferred_from_keywords", None, None, None, None, "matched", None,
+                         None, None, None, None, None, None, None, None, None, None, None, None, None))
+    conn.executemany(
+        "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
+    )
+    conn.commit()
+    conn.close()
+
+    import database
+    monkeypatch.setattr(database, "DB_PATH", db_path)
+
+    from main import app
+    return TestClient(app)
+
+
+def test_monthly_stats_aggregates_across_years_in_calendar_order(monthly_seasonal_client):
+    """
+    The core reason this endpoint was rewritten: it must combine every
+    year into one true seasonal pattern (12 rows, Jan-Dec), not a
+    chronological year-and-month timeline that only looks ordered when
+    there's one year of data and breaks down once there are several.
+    """
+    resp = monthly_seasonal_client.get("/stats/monthly")
+    body = resp.json()
+
+    assert len(body) == 12
+    assert [m["month"] for m in body] == [f"{i:02d}" for i in range(1, 13)]
+    assert [m["month_label"] for m in body][:3] == ["Jan", "Feb", "Mar"]
+
+    counts = {m["month_label"]: m["incident_count"] for m in body}
+    assert counts["Aug"] == 48  # 8 incidents x 6 years
+    assert counts["Feb"] == 12  # 2 incidents x 6 years
+    assert counts["Jan"] == 0   # present with zero, not missing entirely

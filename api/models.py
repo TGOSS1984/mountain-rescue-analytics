@@ -125,7 +125,21 @@ class RegionSummary(BaseModel):
 
 
 class MonthlySummary(BaseModel):
-    month: str  # YYYY-MM
+    """
+    A genuine seasonal aggregate — one row per calendar month (Jan
+    through Dec), combining incidents from every year in the dataset.
+    Always 12 rows, in calendar order, including months with zero
+    incidents. This is deliberately NOT a year-by-year timeline (that's
+    /stats/yearly) — an earlier version of this endpoint grouped by
+    year-and-month together, which produced a genuinely confusing chart
+    once Edale's decade-plus of history was included: with 80+ points
+    crammed into one chart, the chart library auto-skips axis labels to
+    avoid overlap, so the handful of labels actually visible weren't
+    even adjacent bars — it looked randomly ordered even though the
+    underlying data wasn't.
+    """
+    month: str  # "01" through "12"
+    month_label: str  # "Jan" through "Dec", for direct display
     incident_count: int
 
 

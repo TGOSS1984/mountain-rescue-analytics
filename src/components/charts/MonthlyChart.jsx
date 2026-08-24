@@ -9,12 +9,6 @@ import {
 } from "recharts";
 import "./MonthlyChart.css";
 
-const MONTH_LABELS = {
-  "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
-  "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
-  "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
-};
-
 // Alternating orange/yellow bars, matching the palette mockup —
 // distinguishes summer's much higher volume without needing a legend.
 const BAR_COLORS = ["#E8541E", "#F2C14E"];
@@ -29,11 +23,16 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
+/**
+ * Always exactly 12 bars, Jan through Dec, combining every year in the
+ * dataset — a true seasonal pattern, not a chronological timeline. The
+ * API now does this aggregation directly (see /stats/monthly), so no
+ * client-side label derivation or tick-skipping is needed here — with
+ * only 12 fixed points there's no crowding problem to work around, and
+ * every label is always shown.
+ */
 export default function MonthlyChart({ data, loading }) {
-  const chartData = (data || []).map((d) => ({
-    ...d,
-    label: MONTH_LABELS[d.month.slice(5, 7)] || d.month,
-  }));
+  const chartData = data || [];
 
   return (
     <div className="monthly-chart">
@@ -51,7 +50,7 @@ export default function MonthlyChart({ data, loading }) {
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
             <XAxis
-              dataKey="label"
+              dataKey="month_label"
               stroke="#98A1A8"
               fontSize={11}
               fontFamily="JetBrains Mono, monospace"

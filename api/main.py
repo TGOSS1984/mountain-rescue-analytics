@@ -238,28 +238,48 @@ def overall_stats():
     )
 
 
+MONTH_LABELS = {
+    "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
+    "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
+    "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
+}
+
+
 @app.get("/stats/monthly", response_model=list[MonthlySummary])
 def monthly_stats(team: Optional[str] = Query(None)):
+    """
+    True seasonal pattern: one bucket per calendar month, combining
+    every year in the dataset — not a chronological timeline. See
+    MonthlySummary's docstring for why this replaced an earlier
+    year-and-month version that looked broken once enough years of
+    data were included.
+    """
     conn = get_connection()
     try:
         params: list = []
-        where_clause = ""
+        where_clause = "WHERE date IS NOT NULL"
         if team:
-            where_clause = "WHERE source_team_id = ? AND date IS NOT NULL"
+            where_clause += " AND source_team_id = ?"
             params.append(team)
-        else:
-            where_clause = "WHERE date IS NOT NULL"
 
         rows = conn.execute(
-            f"SELECT substr(date, 1, 7) as month, COUNT(*) as incident_count "
+            f"SELECT substr(date, 6, 2) as month, COUNT(*) as incident_count "
             f"FROM incidents {where_clause} "
-            f"GROUP BY month ORDER BY month",
+            f"GROUP BY month",
             params,
         ).fetchall()
     finally:
         conn.close()
 
-    return [MonthlySummary(month=r["month"], incident_count=r["incident_count"]) for r in rows]
+    counts = {r["month"]: r["incident_count"] for r in rows}
+
+    # Always all 12 months, in calendar order, including zero-count
+    # ones — same "complete series, not just what happened to have
+    # data" principle used for the 24-hour time-of-day buckets.
+    return [
+        MonthlySummary(month=m, month_label=MONTH_LABELS[m], incident_count=counts.get(m, 0))
+        for m in sorted(MONTH_LABELS.keys())
+    ]
 
 
 @app.get("/stats/yearly", response_model=list[YearlySummary])
