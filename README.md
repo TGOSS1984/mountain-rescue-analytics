@@ -98,6 +98,20 @@ npm run dev
 
 Then open `http://localhost:5173`.
 
+## Deployment
+
+This deploys as two separate services — a static frontend and an API — not one combined app, since that's the natural split for a React SPA plus a Python backend and keeps each side on the hosting platform it's actually suited to.
+
+**API → [Render](https://render.com)**
+
+The repo includes `render.yaml` for one-click infrastructure-as-code deployment: connect the repo in Render's dashboard, it reads the blueprint automatically (Python runtime, `api/` as the root directory, correct build/start commands already set). The one thing to configure manually afterwards is the `ALLOWED_ORIGINS` environment variable — set it to the real deployed frontend URL once that exists, comma-separated if there's more than one. Without it, CORS defaults to `localhost` only, which is safe but means the deployed frontend can't reach the API until it's set.
+
+The SQLite database (`pipeline/data/processed/incidents.db`) is committed to the repo rather than regenerated on deploy — Render's free tier wipes the filesystem on every deploy, and re-running geocoding against Nominatim's rate limit on every single deploy would be both slow and an unreasonable load on a free service. Rebuild it locally with `python run_pipeline.py` and commit the result whenever the dataset needs refreshing.
+
+**Frontend → [Vercel](https://vercel.com)**
+
+Zero-config — Vercel auto-detects the Vite project and gets the build command and output directory right without any extra file. The only setup step is adding `VITE_API_BASE` under Settings → Environment Variables, pointing at the deployed Render API's URL. See `.env.example` for the local-dev equivalent.
+
 ## A note on the data
 
 This project uses publicly published incident summary data. It doesn't include any personal or identifying information about anyone involved in a real callout — nothing here is about specific individuals, and the geocoding is deliberately kept at a level of precision (nearest named feature, not exact coordinates) that reflects how the source data itself is published.
