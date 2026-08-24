@@ -15,7 +15,7 @@
 **[Live site](https://mountain-rescue-analytics.vercel.app)** · **[API docs](https://mountain-rescue-analytics-api.onrender.com/docs)**
 <!-- TODO: double check the live site link once the Vercel deploy's settled — using the default Vercel naming pattern here as a placeholder, API link is confirmed working -->
 
-A dashboard that takes real, publicly available UK mountain rescue callout data and turns it into something you can actually explore — where incidents happen, when, what kind, how the weather and the light played into it, and how three genuinely different bits of British upland terrain compare to each other.
+A dashboard that takes real, publicly available UK mountain rescue callout data and turns it into something you can actually explore — where incidents happen, when, what kind, how the weather and the light played into it, and how four genuinely different bits of British upland terrain compare to each other.
 
 I built this as the analytics companion to my [UK Summit Guides](../uk-summit-guides) and [SummitLog UK](../summitlog-uk) projects, but it stands on its own. The other two are about planning a trip and logging one. This one is about what happens when a trip goes wrong, at a national scale, and what the numbers actually say about it.
 
@@ -38,13 +38,13 @@ I built this as the analytics companion to my [UK Summit Guides](../uk-summit-gu
 
 ## Why this exists
 
-Most of my other analytics work (see [Ascent Analytics](../ascent-analytics)) uses synthetic data, because it's the sensible way to build a polished BI project without wrestling with a live API or a badly-formatted government CSV. This project is the opposite on purpose. Mountain rescue incident data is real, it's public, and it's genuinely messy — inconsistent date formats, free-text location descriptions instead of coordinates, categories that drift depending on who filled in the report, and three teams who each publish their callouts in a completely different shape. Cleaning that properly, and being honest in the docs about the judgement calls involved, is a big part of what this project is actually demonstrating.
+Most of my other analytics work (see [Ascent Analytics](../ascent-analytics)) uses synthetic data, because it's the sensible way to build a polished BI project without wrestling with a live API or a badly-formatted government CSV. This project is the opposite on purpose. Mountain rescue incident data is real, it's public, and it's genuinely messy — inconsistent date formats, free-text location descriptions instead of coordinates, categories that drift depending on who filled in the report, and four teams who each publish their callouts in a completely different shape. Cleaning that properly, and being honest in the docs about the judgement calls involved, is a big part of what this project is actually demonstrating.
 
-It also turned into a decent stress test for a scraping pipeline: three real sites, three different structures, and more than a few genuine bugs along the way that only real data ever surfaced — a date parser picking up a stray year from deep in a narrative, a non-breaking space silently breaking a regex, a geocoding library expecting a completely different coordinate shape than the one I gave it. The commit history is the honest version of finding and fixing all of that, not a tidied-up highlight reel.
+It also turned into a decent stress test for a scraping pipeline: four real sites, four different structures, and more than a few genuine bugs along the way that only real data ever surfaced — a date parser picking up a stray year from deep in a narrative, a non-breaking space silently breaking a regex, a geocoding library expecting a completely different coordinate shape than the one I gave it, a DOM-parent-walking scraper silently returning one entry's data for every entry on the page. The commit history is the honest version of finding and fixing all of that, not a tidied-up highlight reel.
 
 ## What it does
 
-- Scrapes incident logs from three UK mountain rescue teams — Edale (Peak District), Wasdale (Lake District), and Ogwen Valley (Snowdonia) — each with a different site structure, and cleans the results into one consistent schema
+- Scrapes incident logs from four UK mountain rescue teams — Edale (Peak District), Wasdale (Lake District), Ogwen Valley (Snowdonia), and Upper Wharfedale (Yorkshire Dales) — each with a different site structure, and cleans the results into one consistent schema
 - Geocodes free-text locations so incidents can be plotted on a map, and pulls terrain elevation for every one of them
 - Joins in historical weather (temperature, rain, wind, condition, sunrise/sunset) and UK bank holiday data for the date of each incident
 - Tests a few real hypotheses against the data rather than just charting it for its own sake — does bad weather actually correlate with more callouts, does darkness, do bank holidays, does the day of the week — including checking one specific safety claim a team made in their own published incident log
@@ -56,7 +56,7 @@ It also turned into a decent stress test for a scraping pipeline: three real sit
 **Pipeline:** Python, pandas, pandera (schema validation), pytest, BeautifulSoup
 **Backend:** FastAPI, SQLite
 **Frontend:** React, Vite, Leaflet + leaflet.heat (mapping), Recharts (charts)
-**Data sources:** Edale MRT, Wasdale MRT, and Ogwen Valley MRO's own published incident logs; Open-Meteo (historical weather, sunrise/sunset, elevation); gov.uk (UK bank holidays); OpenStreetMap/Nominatim (geocoding)
+**Data sources:** Edale MRT, Wasdale MRT, Ogwen Valley MRO, and Upper Wharfedale FRA's own published incident logs; Open-Meteo (historical weather, sunrise/sunset, elevation); gov.uk (UK bank holidays); OpenStreetMap/Nominatim (geocoding)
 
 ## Project structure
 
