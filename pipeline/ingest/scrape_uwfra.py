@@ -187,6 +187,7 @@ def _fetch_full_narrative(article_url):
 
 def scrape(max_pages=20):
     incidents = []
+    missing_title_count = 0
     for page in range(1, max_pages + 1):
         url = "https://uwfra.org.uk/incidents"
         params = {"yr": 0, "page": page} if page > 1 else None
@@ -205,6 +206,19 @@ def scrape(max_pages=20):
             fields = _parse_entry_fields(entry["block_text"])
             if not fields["date_raw"]:
                 continue  # skip anything that isn't a genuine incident entry
+
+            if not fields["title"]:
+                # Real, confirmed-against-live-data edge case: the
+                # positional "title is the line right after the date+ref
+                # line" heuristic doesn't hold for every entry — some
+                # real UWFRA page layouts put the date and title in the
+                # same text node with no line break, or something else
+                # about that specific entry doesn't match the assumed
+                # shape. Counted and reported rather than silently
+                # producing rows with blank location_text — see
+                # clean_incidents.py for how the null case is handled
+                # downstream without crashing.
+                missing_title_count += 1
 
             article_url = entry["article_url"]
             if article_url and not article_url.startswith("http"):
@@ -230,6 +244,10 @@ def scrape(max_pages=20):
             })
 
         time.sleep(REQUEST_DELAY_SECONDS)
+
+    if missing_title_count:
+        print(f"  [uwfra] warning: {missing_title_count}/{len(incidents)} entries had no "
+              f"extractable title (location_text will be blank for these rows)")
 
     return incidents
 

@@ -216,7 +216,15 @@ def clean_team_file(raw_path):
 
     for item in raw_incidents:
         full_text = item.get("content_text") or item.get("content_html") or ""
-        title = item.get("title_raw", "").strip()
+        # NOT item.get("title_raw", "").strip() — .get()'s default only
+        # applies when the key is *missing*, not when it's present but
+        # explicitly None, which is exactly what happened for some real
+        # UWFRA entries where the title-extraction regex in
+        # scrape_uwfra.py failed to find a match (confirmed against a
+        # real pipeline run: AttributeError on 'NoneType'.strip()).
+        # Matches full_text's existing or-chain pattern above for the
+        # same reason.
+        title = (item.get("title_raw") or "").strip()
 
         # WordPress's REST API returns title/content with raw HTML
         # entities un-decoded (e.g. "Lady Canning&#8217;s" instead of

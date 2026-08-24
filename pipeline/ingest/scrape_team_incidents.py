@@ -208,6 +208,21 @@ def main():
             scrape_ovmro.main()
             continue
 
+        if source["team_id"] == "uwfra":
+            # Custom PHP CMS, paginated archive + individual article
+            # pages — also handled by its own scraper. See
+            # scrape_uwfra.py. Missing this branch was a real bug: a
+            # full local pipeline run silently fell through to the
+            # generic REST/HTML-fallback path below instead, which
+            # doesn't know UWFRA's page structure at all and produced
+            # "[uwfra] collected 0 raw incidents" — no error, no
+            # exception, just zero data, only caught because the
+            # deployed API's /regions response was checked directly and
+            # UWFRA was visibly absent from it.
+            import scrape_uwfra
+            scrape_uwfra.main()
+            continue
+
         incidents = scrape_source(source)
         out_path = RAW_DIR / f"{source['team_id']}_incidents_raw.json"
         out_path.write_text(json.dumps(incidents, indent=2, ensure_ascii=False), encoding="utf-8")

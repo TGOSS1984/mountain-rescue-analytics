@@ -308,3 +308,34 @@ def test_ovmro_still_works_after_uwfra_changes(tmp_path):
     assert row["duration_minutes"] == 308  # 5hr 8min in OVMRO's HH:MM format
     assert row["team_members_attended"] == 19
     assert row["total_attendance_minutes"] is None  # OVMRO doesn't have this field
+
+
+def test_uwfra_none_title_does_not_crash(tmp_path):
+    """
+    Regression test for a real bug from an actual pipeline run: some
+    real UWFRA entries produce title_raw=None (the title-extraction
+    heuristic in scrape_uwfra.py doesn't hold for every page layout),
+    and .get("title_raw", "").strip() crashes on that — the default
+    only applies when the key is missing, not when it's present but
+    None. Fixed with an `or ""` pattern; this proves the fix holds and
+    the row still gets cleaned (with blank location_text) rather than
+    crashing the whole pipeline.
+    """
+    import json
+    from clean_incidents import clean_team_file
+
+    raw_data = [{
+        "source_team_id": "uwfra", "source_method": "html_scrape_paginated_archive",
+        "title_raw": None,
+        "content_text": "Some narrative text.",
+        "date_raw_ddmonyyyy": "16 Aug 2026", "incident_ref": "2026/31",
+        "attendees_count": "10", "duration_raw": "2hr 55min", "total_attendance_raw": "29hr 10min",
+        "link": "https://uwfra.org.uk/blog/article.php?id=346",
+    }]
+    raw_path = tmp_path / "uwfra_incidents_raw.json"
+    raw_path.write_text(json.dumps(raw_data), encoding="utf-8")
+
+    df = clean_team_file(raw_path)  # must not raise
+
+    assert df.iloc[0]["location_text"] == ""
+    assert df.iloc[0]["date"] == "2026-08-16"  # rest of the row still cleans fine
