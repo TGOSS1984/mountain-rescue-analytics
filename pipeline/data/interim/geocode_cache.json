@@ -4104,6 +4104,1638 @@
       "lon": -3.2333227,
       "status": "matched",
       "confidence": "low"
+    },
+    "uwfra:female fallen bolton abbaey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injury scar house reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:sheep stuck in a bog": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injury nidd gorge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male suspected stroke trollers gill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:moblity scooter rescue": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male rescue gargrave": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female in river": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:cragfast brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen horse rider east marton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service riffa woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:stranded sheep": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen off cycle": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male injured how stean gorge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male fallen from mountain bike": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen youth brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:incident bolon abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:hight risk missing person grassington": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female skipton woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:dog rescue north york moors": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:casualty white wells ilkley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male collapsed barden fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male slpped oakdale harrogate": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen cow and calfe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:dog rescue threshfield quarry": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:incident #7 \u2013 07/2026: sharphaw rescue": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:incident #06 \u2013 farnhill moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:callout #04 \u2013 sleets gill cave, north yorkshire": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:incident #03 \u2013 2026": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call out 2 \u2013 11 january": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call out 1 \u2013 5 january 2026": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call out 58 \u2013 cow and calf, ilkley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call out 56 \u2013 14 december": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:callout 55 \u2013 successful search in gargrave": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:a historic day of mutual support for uwfra": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call out #52 \u2013 1st november 2025 \u2013 foxup, littondale": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:callout 51 \u2013 12th september 2025, hebden gill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call out #50 \u2013 thursday 9th october 2025 \u2013 farnhill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call out #49 \u2013 dowber gill passage, kettlewell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:double call out: steep bank fall at bolton abbey & back pain on the pennine way": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:ankle injury scar house hubberholme": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen mountain biker barden reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen sharp haw": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:suspected stroke fountains abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male fallen from height how stean gorge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen female bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injury bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injury grass woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male fallen brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist emergency services": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male head injury brimham": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:deer down a gully guisecliff": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured off road motorcyclist": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:missing teenager burnsall": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female broken ankle simon's seat": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:walker taken ill above kettlewell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured climber kilnsey crag": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male skipton woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:high risk person washburn valley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:ankle injury starbotton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen near to cow and calf ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male fallen near kettlewell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female casualty grimwith reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen horse rider": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male head injury skipton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:buckden gill falls": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:snowbound dallow moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:snowbound langstrothdale": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female wrist injury thruscross": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search whinny gill reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:ickornshaw moor cowling": {
+      "lat": 53.86161,
+      "lon": -2.0517939,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "uwfra:injured male brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search burnsall area": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male cragfast brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:brimham rocks": {
+      "lat": 54.0776861,
+      "lon": -1.6829614,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "uwfra:incident ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female yarnbury": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female scarhouse": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen strid area bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of a dog guisecliffe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:dog in river": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male chest pains silsden": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:dog rescue guiscliffe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:paraglider incident": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:girls cragfast brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:ilkley moor": {
+      "lat": 53.9109302,
+      "lon": -1.8284706,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "uwfra:female fallen on dales way": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:unwell female bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:lost darnbrook/fountains fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:collapsed runner cracoe fell race": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for missing male barden": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured mountain biker white wells ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen from horse spofforth": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female ilkley moor.": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:dog rescue thruscross reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female ankle injury yarnbury": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female cragfast brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fitting linton falls": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female knee injury huby": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female leg injury cracoe fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:casualty carry strid wood bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for high risk missing person ilkley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for missing female grimwith area.": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:casualty with a knee injury bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search kettlewell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male with medical incident conistone pie": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male buckden pike": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of cavers easegill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:stranded vehicle and occupants. scar house nidderdale": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for vulnerable male blackpool area": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for high risk male skipton woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male fallen middlesmoor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female with ankle injury grassington": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen trollers gill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen horse rider bishop thornton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female difficulty in walking": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:report of a male trapped underneath a tree": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for missing female grassington": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female hag dyke": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of a calf mastiles lane": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female injured ankle low bradley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male with chest pains": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of a dog arncliffe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:casualty on railway tracks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:stuck climber brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of a calf barden": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:cave rescue goyden pot": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male dib scar": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:lost walker starbotton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured walker embsay crag": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:twelve year old girl fallen down cliff. hell wath": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured walker simon's seat": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist calder valley team with stretcher carry": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service with a fallen male conistone": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service burnsall": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen arncliffe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:unresponsive female skipton woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male fallen appletreewick": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen kettlewell to starbotton path": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male with knee injury ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:report of boy in the water grimwith reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:overdue cavers lancaster easgill system": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:report of motorcyclist who had come off his bike scar house": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen kettlewell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured mountain biker ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:collapsed female bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:unwell walker cow and calf ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:overdue walkers, fountains fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen climber. cow and calf": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:semi conscious female great whernside": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen mountain biker": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:cragfast boy brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:ankle injury trollers gill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female with injured ankle starbotton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male on rocky buttress ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female starbotton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male thruscross reservoir.": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:missing child": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen from horse. above addingham": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:unwell male middlesmoor pasture": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:report of unconscious female farnhill moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female with ankle injury cracoe fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for missing female almscliffe crag": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist police with the recovery of a body": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured 14 year old male bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female with ankle injury grass woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured biker weets top": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:73 year old male fell into stream": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female with suspected broken leg buckden pike area": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female with ankle injury simon's seat": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen at stepping stones bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male fallen skipton woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female ankle injury ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:overdue diver goyden pot": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:cragfast male brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female, groin injury great whernside": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female ankle injury bradley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:ankle injury burley in wharfedale": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female ankle injury starbotton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:vulnerable person pateley bridge area": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:walker with ankle injury wilsill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:climber fallen kilnsey crag": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:casualty knee injury on track up to rylstone fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:elderly male fainted guisecliffe wood": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male, stepping stones kettlwell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female near goyden pot": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen in canal boat": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male runner with an injured ankle nidd gorge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist swaledale team with a female with an ankle injury hackfall woods grewelthorpe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of male in overturned wheelchair": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:missing male minskip": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen child brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of 8yr old boy brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:recovery of a body": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for high risk male": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male. rocky valley ilkley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured person brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen threshfield": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of fallen fisherman on river bank": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female on footpath near middlesmoor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service gaistrill's strid": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of two dogs guisecliff": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of sheep from floods kilnsey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service with an injured female fewston area": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female fallen crimple valley harrogate": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist cro overdue cavers": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fell runner with injured knee march ghyll reservoir denton moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:female ankle injury bastow wood grassington": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:unconscious male ripon": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male dob park otley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:cold and exhausted male": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:family and vehicle stuck in snow": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:vehicles stuck in the snow": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:casualty lindley wood": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:farmer fell from quad bike": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male hebden gill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call to assist with a 74yr old female believed to have collapsed": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist casualty with a lower leg injury": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:continuing search for missing walker": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search great whernside kettlewell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:runner dies on moorland near ilkley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female rylstone fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male embsay": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:tired walker arncliffe to kettlewell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male stuck on rocks at brimham": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male skipton woods": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue of a dog": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male ankle injury silsden": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male harrogate": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen female fewston reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:boy fallen nidd gorge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:report of missing canoeist ripon": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male ill bolton abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female bishop thornton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:vulnerable male gargrave": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:male difficulty breathing": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist calder valley team in a search": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen female dales way ilkley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist calder valley team with a fallen male": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female rylstone cross": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male ilkley moor": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen female trollers gill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male cow and calf": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured person kilnsey crag": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist swaledale team grewlethorpe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search for vulnerable male": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:personal locator beacon alarm": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female timble": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:incidents risplith and spofforth": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:casualty denton": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male cow and calf ilkley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male fountains abbey": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured female nidd gorge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured male. brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:rescue beamsley beacon": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:incident brimham rocks": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured mountain biker": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist elderly female": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured walker staveley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service with casualty woods off penny pot lane harrogate": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen male almscliffe crag": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search grassington area": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:fallen fell runner": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:assist ambulance service": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:search pateley bridge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:call to fewston reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
     }
   }
 }

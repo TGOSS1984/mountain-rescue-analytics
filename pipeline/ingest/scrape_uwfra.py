@@ -80,98 +80,82 @@ def _duration_to_minutes(text):
     return int(hours) * 60 + int(minutes)
 
 
-ENTRY_START_RE = re.compile(r"(\d{1,2}\s+\w{3}\s+\d{4})\s+(\d{4}/\d+)")
+ATTENDEES_RE = re.compile(r"Attendees:\s*(\d+)")
+DURATION_LABEL_RE = re.compile(r"Duration:\s*(\d+hr\s+\d+min)")
+TOTAL_ATTENDANCE_RE = re.compile(r"Total attendance:\s*(\d+hr\s+\d+min)")
+DATE_REF_RE = re.compile(r"(\d{1,2}\s+\w{3}\s+\d{4})\s+(\d{4}/\d+)")
 
 
 def _parse_archive_page(html):
     """
     Parses one archive listing page into a list of incident summaries.
 
-    An earlier version tried to isolate each entry by walking a fixed
-    number of parent levels up from its "Read more..." link — that
-    silently grabbed a container broad enough to span multiple entries
-    at once (verified with a real test: two different entries both
-    returned the first entry's data). Fixed with the same strategy
-    already proven for Wasdale's single-page report: flatten the whole
-    page to plain text, then split on the entry-start pattern (date +
-    incident reference, e.g. "16 Aug 2026 2026/31") rather than trying
-    to reconstruct DOM boundaries that aren't guaranteed stable.
+    Rewritten against real, verified HTML fetched directly from the
+    live site (not a reconstruction) after an earlier version failed
+    on literally every entry (285/285) in a real pipeline run. The
+    root cause: that version flattened the whole page to plain text
+    and looked for a single line containing both the date and incident
+    reference together — but the real markup separates them with an
+    <i> icon tag:
 
-    Article URLs are collected separately (plain text loses hyperlinks)
-    and zipped back onto the text chunks by position — both are read
-    in the same top-to-bottom document order, so a same-length
-    positional pairing is more reliable here than trying to spatially
-    associate a link with "its" text block.
+        <i class="fa-regular fa-calendar"></i>16 Aug 2026
+        <i class="fa-solid fa-hashtag"></i>2026/31
+
+    which get_text() splits onto two separate lines, so that line
+    never existed. This version doesn't flatten anything — it works
+    directly against the DOM, using the real, stable structure
+    confirmed from a live fetch: every entry is a `div.blog-item`
+    with four direct-child divs in a fixed order (date/ref, title,
+    narrative snippet, stats) followed by the "Read more" link, all
+    consistent across 16 real entries checked before writing this.
     """
     soup = BeautifulSoup(html, "html.parser")
-
-    article_urls = [
-        a.get("href", "")
-        for a in soup.find_all("a", string=re.compile(r"Read more", re.IGNORECASE))
-    ]
-
-    # Scope to the main content area if the theme provides one, to
-    # avoid nav/footer text polluting the split — falls back to the
-    # whole page otherwise.
-    content = soup.select_one("main") or soup
-    flat_text = content.get_text("\n", strip=True)
-
-    # Split into entry chunks on each match of the start pattern.
-    starts = list(ENTRY_START_RE.finditer(flat_text))
-    chunks = []
-    for i, match in enumerate(starts):
-        chunk_start = match.start()
-        chunk_end = starts[i + 1].start() if i + 1 < len(starts) else len(flat_text)
-        chunks.append(flat_text[chunk_start:chunk_end])
-
     entries = []
-    for i, chunk in enumerate(chunks):
-        article_url = article_urls[i] if i < len(article_urls) else None
-        entries.append({"article_url": article_url, "block_text": chunk})
+
+    for item in soup.select("div.blog-item"):
+        col = item.select_one(".col-sm")
+        if not col:
+            continue
+
+        children = col.find_all("div", recursive=False)
+        if len(children) < 4:
+            continue  # not a genuine incident entry — skip rather than guess
+
+        date_div, title_div, _narrative_div, stats_div = children[:4]
+        read_more = col.select_one("a.stretched-link")
+
+        entries.append({
+            "date_text": date_div.get_text(" ", strip=True),
+            "title": title_div.get_text(strip=True) or None,
+            "stats_text": stats_div.get_text(" ", strip=True),
+            "article_url": read_more.get("href", "") if read_more else None,
+        })
 
     return entries
 
 
-def _parse_entry_fields(block_text):
-    """
-    Extracts the structured fields out of one entry's raw text block.
-    Real example line shapes:
-        16 Aug 2026 2026/31
-        Female fallen Bolton Abbaey
-        <narrative...>
-        Attendees: 10
-        Duration: 2hr 55min
-        Total attendance: 29hr 10min
-    """
-    date_match = re.search(r"(\d{1,2}\s+\w{3}\s+\d{4})\s+(\d{4}/\d+)", block_text)
+def _parse_entry_fields(entry):
+    """Extracts the structured fields from one entry dict produced by
+    _parse_archive_page — operates on the already-isolated per-entry
+    text, not a flattened whole-page block, so there's no risk of one
+    entry's regex match bleeding into another's."""
+    date_match = DATE_REF_RE.search(entry["date_text"])
     date_raw = date_match.group(1) if date_match else None
     incident_ref = date_match.group(2) if date_match else None
 
-    attendees_match = re.search(r"Attendees:\s*(\d+)", block_text)
+    attendees_match = ATTENDEES_RE.search(entry["stats_text"])
     attendees = attendees_match.group(1) if attendees_match else None
 
-    duration_match = re.search(r"Duration:\s*(\d+hr\s+\d+min)", block_text)
+    duration_match = DURATION_LABEL_RE.search(entry["stats_text"])
     duration_raw = duration_match.group(1) if duration_match else None
 
-    total_match = re.search(r"Total attendance:\s*(\d+hr\s+\d+min)", block_text)
+    total_match = TOTAL_ATTENDANCE_RE.search(entry["stats_text"])
     total_attendance_raw = total_match.group(1) if total_match else None
-
-    # Title is the line right after the date+ref line, before the
-    # narrative starts — extracted positionally since it has no
-    # distinguishing markup of its own in the plain-text block.
-    lines = [l for l in block_text.split("\n") if l.strip()]
-    title = None
-    if date_match:
-        for i, line in enumerate(lines):
-            if date_raw in line and incident_ref in line:
-                if i + 1 < len(lines):
-                    title = lines[i + 1]
-                break
 
     return {
         "date_raw": date_raw,
         "incident_ref": incident_ref,
-        "title": title,
+        "title": entry["title"],
         "attendees": attendees,
         "duration_raw": duration_raw,
         "total_attendance_raw": total_attendance_raw,
@@ -203,7 +187,7 @@ def scrape(max_pages=20):
             break
 
         for entry in entries:
-            fields = _parse_entry_fields(entry["block_text"])
+            fields = _parse_entry_fields(entry)
             if not fields["date_raw"]:
                 continue  # skip anything that isn't a genuine incident entry
 
