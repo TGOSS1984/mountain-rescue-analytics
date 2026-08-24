@@ -163,3 +163,78 @@ def test_duration_to_minutes_conversion():
     assert _duration_to_minutes("29hr 10min") == 1750
     assert _duration_to_minutes(None) is None
     assert _duration_to_minutes("") is None
+
+
+# Real article page HTML — confirms the exact production bug: the
+# "Recent Incidents" sidebar (id="moreArticles") lists "Sheep stuck in
+# a bog" on THIS page too, even though this incident is a completely
+# unrelated fall at Bolton Abbey. A version that falls back to the
+# whole page on a selector miss would pick up "sheep" from here and
+# misclassify the row.
+REAL_ARTICLE_HTML = """
+<div class="row g-5">
+  <div class="col-lg-8 col-xl-9">
+    <div class="text-body-secondary mb-2"><i class="fa-regular fa-calendar me-2"></i>16 Aug 2026</div>
+    <h1 class="mb-4">Female fallen Bolton Abbaey</h1>
+    <div class="d-md-flex flex-wrap text-body-secondary mb-4">
+      <div class="me-4 mb-1 text-nowrap"><i class="fa-solid fa-hashtag me-2"></i>2026/31</div>
+      <div class="me-4 mb-1 text-nowrap"><i class="fa-regular fa-user-group fa-fw me-2"></i>Attendees: 10</div>
+    </div>
+    <div class="mb-3 position-relative" id="images"><a href="x.jpg"><img src="x.jpg" /></a></div>
+    <p>&nbsp;The team was called by Yorkshire Ambulance Service to assist a 78-year-old woman who had suffered a fall near St Mary and St Cuthbert&rsquo;s Church at Bolton Abbey.</p>
+    <p>The casualty had sustained a suspected neck of femur injury.</p>
+  </div>
+  <div class="col-lg" id="moreArticles">
+    <h5 class="mb-4">Recent Incidents</h5>
+    <a href="blog/article.php?id=344" class="text-reset text-decoration-none d-flex pb-3 border-bottom mb-3">
+      <div class="flex-grow-1 ms-3">
+        <div class="text-body-secondary mb-1 small">02 Aug 2026</div>
+        <div class="fw-bold">Sheep stuck in a bog</div>
+      </div>
+    </a>
+  </div>
+</div>
+"""
+
+
+def test_narrative_excludes_recent_incidents_sidebar():
+    """
+    Regression test for a real production bug: a full pipeline run
+    once classified 285/285 UWFRA incidents as animal_rescue, because
+    narrative extraction silently fell back to the whole page when its
+    guessed selectors ("article", ".content") matched nothing real,
+    picking up the word "sheep" from the site-wide "Recent Incidents"
+    sidebar on every single article page regardless of the actual
+    incident. This is a real, unrelated fall at Bolton Abbey — the
+    extracted narrative must not contain "sheep" or any sidebar title.
+    """
+    from unittest.mock import patch, MagicMock
+    from scrape_uwfra import _fetch_full_narrative
+
+    fake_resp = MagicMock()
+    fake_resp.text = REAL_ARTICLE_HTML
+    with patch("scrape_uwfra._get", return_value=fake_resp):
+        narrative = _fetch_full_narrative("https://uwfra.org.uk/blog/article.php?id=346")
+
+    assert "sheep" not in narrative.lower()
+    assert "Scar House" not in narrative
+    assert "Yorkshire Ambulance" in narrative  # genuinely part of this incident
+
+
+def test_narrative_returns_none_on_selector_miss_not_whole_page():
+    """
+    If the real content column selector ever fails to match (a future
+    site redesign, for example), this must return None — a missing
+    narrative that falls back to the title — rather than silently
+    falling back to the whole page again, which is exactly what caused
+    the original bug.
+    """
+    from unittest.mock import patch, MagicMock
+    from scrape_uwfra import _fetch_full_narrative
+
+    fake_resp = MagicMock()
+    fake_resp.text = "<html><body><p>Some page with no matching structure at all</p></body></html>"
+    with patch("scrape_uwfra._get", return_value=fake_resp):
+        narrative = _fetch_full_narrative("https://uwfra.org.uk/blog/article.php?id=999")
+
+    assert narrative is None

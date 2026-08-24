@@ -163,10 +163,34 @@ def _parse_entry_fields(entry):
 
 
 def _fetch_full_narrative(article_url):
+    """
+    Real bug, confirmed from a live production run: the article page's
+    real narrative lives in plain <p> tags inside div.col-lg-8.col-xl-9
+    — a completely different column from the "Recent Incidents" sidebar
+    (id="moreArticles"), which appears on every single article page and
+    lists site-wide recent incident titles. An earlier version guessed
+    at "article" and ".content" selectors that matched neither real
+    element, silently falling back to the whole page — meaning every
+    row's classification text included that sidebar's titles regardless
+    of what the actual incident was, which is exactly why one recent
+    animal-welfare callout ("Sheep stuck in a bog," appearing in that
+    sidebar on every page) caused every single UWFRA row in a real
+    pipeline run to misclassify as animal_rescue.
+
+    Deliberately returns None rather than falling back to the whole
+    page if the real selector doesn't match — a missing narrative
+    (the caller falls back to just the title) is honest; silently
+    re-introducing a whole-page fallback is exactly the bug this
+    function exists to prevent from happening again.
+    """
     resp = _get(article_url)
     soup = BeautifulSoup(resp.text, "html.parser")
-    content = soup.select_one("article") or soup.select_one(".content") or soup
-    return content.get_text("\n", strip=True)
+    content_col = soup.select_one(".col-lg-8.col-xl-9")
+    if not content_col:
+        return None
+    paragraphs = content_col.find_all("p")
+    narrative = " ".join(p.get_text(" ", strip=True) for p in paragraphs)
+    return narrative or None
 
 
 def scrape(max_pages=20):

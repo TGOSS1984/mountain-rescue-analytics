@@ -7,16 +7,20 @@
 }
 
 .site-header__inner {
-  height: var(--header-height);
+  min-height: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex-shrink: 0;
 }
 
 .brand__name {
@@ -31,6 +35,7 @@
 .site-nav {
   display: flex;
   gap: var(--space-6);
+  flex-wrap: wrap;
 }
 
 .site-nav__link {
@@ -55,8 +60,33 @@
   border-bottom-color: var(--color-rescue-orange);
 }
 
+/*
+  Real bug fix: .site-header__inner previously used a fixed `height`
+  (not min-height) with the brand and nav side by side. Once the
+  brand name genuinely wrapped to multiple lines on a narrow screen —
+  confirmed from a live screenshot, not assumed — the fixed height
+  clipped the row and the vertically-centred nav links overlapped the
+  wrapped text instead of the header growing to fit. min-height above
+  fixes the clipping; this breakpoint additionally stacks brand and
+  nav onto their own full-width rows below a certain width, so the
+  brand name has room to wrap without any nav item sharing that space
+  at all, rather than relying on wrapping/shrinking alone to avoid
+  every possible overlap.
+*/
 @media (max-width: 640px) {
+  .site-header__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+  }
+
+  .brand__name {
+    font-size: var(--text-sm);
+  }
+
   .site-nav {
     gap: var(--space-4);
+    width: 100%;
   }
 }
