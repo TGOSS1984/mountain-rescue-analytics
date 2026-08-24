@@ -8,6 +8,7 @@ Run locally: uvicorn main:app --reload
 Docs (auto-generated): http://localhost:8000/docs
 """
 
+import os
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
@@ -28,11 +29,21 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Wide open for local frontend dev (Vite's default port and others).
-# Tighten this to a specific origin before any real deployment.
+# Comma-separated list of allowed origins, set via an ALLOWED_ORIGINS
+# environment variable in production (the real deployed frontend URL,
+# e.g. https://mountain-rescue-analytics.vercel.app) — never falls back
+# to "*" once that variable is set. Defaults to Vite's local dev origin
+# so nothing needs configuring just to run this locally.
+_default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("ALLOWED_ORIGINS", _default_origins).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET"],
     allow_headers=["*"],
 )

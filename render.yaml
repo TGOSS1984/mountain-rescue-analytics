@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: mountain-rescue-analytics-api
+    runtime: python
+    plan: free
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      # Set this to the real deployed frontend URL once it exists
+      # (e.g. https://mountain-rescue-analytics.vercel.app) — comma-
+      # separate multiple origins if needed. Without this set, CORS
+      # falls back to localhost only (see main.py), which is safe but
+      # means the deployed frontend won't be able to reach the API
+      # until this is configured.
+      - key: ALLOWED_ORIGINS
+        sync: false
