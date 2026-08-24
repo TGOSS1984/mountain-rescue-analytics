@@ -13,7 +13,7 @@ from pandera import Column, Check
 
 ALLOWED_ACTIVITY_TYPES = {
     "climbing", "cycling", "running", "water",
-    "search_missing_person", "walking", "unspecified",
+    "search_missing_person", "walking", "animal_rescue", "unspecified",
 }
 
 ALLOWED_OUTCOMES = {
@@ -31,8 +31,9 @@ incidents_schema = pa.DataFrameSchema(
         "source_team_id": Column(str, nullable=False),
         "source_method": Column(str, Check.isin([
             "rest_api", "html_scrape",
-            "html_scrape_single_page",      # Wasdale
-            "html_scrape_rendered_table",   # OVMRO
+            "html_scrape_single_page",        # Wasdale
+            "html_scrape_rendered_table",     # OVMRO
+            "html_scrape_paginated_archive",  # UWFRA
         ])),
         "incident_id": Column(str, nullable=True),  # nullable — see clean_incidents.py notes
         "location_text": Column(str, nullable=False),
@@ -43,12 +44,16 @@ incidents_schema = pa.DataFrameSchema(
         "outcome_source": Column(str, Check.isin(["stated_by_team", "inferred_from_keywords"])),
         "narrative_raw": Column(str, nullable=True),
         "source_url": Column(str, nullable=True),
-        # OVMRO-only fields — null for every other source (they simply
-        # don't publish this data), not zero-filled, so "not provided"
-        # stays distinguishable from "recorded as zero."
+        # duration_minutes/team_members_attended: originally OVMRO-only,
+        # now also populated by UWFRA — null for Edale/Wasdale, which
+        # simply don't publish this data, not zero-filled, so "not
+        # provided" stays distinguishable from "recorded as zero."
         "duration_minutes": Column(float, nullable=True, checks=Check.ge(0)),
         "casualties_count": Column(float, nullable=True, checks=Check.ge(0)),
         "team_members_attended": Column(float, nullable=True, checks=Check.ge(0)),
+        # UWFRA-only: aggregate volunteer person-hours for the whole
+        # operation, genuinely unique to this source among the four.
+        "total_attendance_minutes": Column(float, nullable=True, checks=Check.ge(0)),
     },
     strict=False,   # allow extra columns added later (e.g. geocoded lat/lon) without breaking this check
     coerce=True,

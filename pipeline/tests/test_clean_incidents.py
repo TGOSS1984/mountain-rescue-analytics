@@ -217,3 +217,94 @@ def test_parse_date_rejects_implausible_year_from_narrative():
         "mention 27 February 0820 as an unrelated historical curiosity."
     )
     assert parse_date(no_real_header) is None
+
+
+def test_parse_uwfra_date():
+    from clean_incidents import parse_uwfra_date
+    assert parse_uwfra_date("16 Aug 2026") == "2026-08-16"
+    assert parse_uwfra_date("02 Aug 2026") == "2026-08-02"
+    assert parse_uwfra_date("29 May 2026") == "2026-05-29"
+    assert parse_uwfra_date(None) is None
+    assert parse_uwfra_date("") is None
+
+
+def test_uwfra_duration_to_minutes():
+    from clean_incidents import uwfra_duration_to_minutes
+    assert uwfra_duration_to_minutes("2hr 55min") == 175
+    assert uwfra_duration_to_minutes("29hr 10min") == 1750
+    assert uwfra_duration_to_minutes("0hr 22min") == 22
+    assert uwfra_duration_to_minutes(None) is None
+
+
+def test_uwfra_full_cleaning_pipeline(tmp_path):
+    """
+    End-to-end test using realistic raw UWFRA data, checking every
+    UWFRA-specific field lands correctly: date, duration (operation
+    length, distinct from total person-hours), attendees, and the new
+    animal_rescue category on a genuine animal-welfare callout.
+    """
+    import json
+    from clean_incidents import clean_team_file
+
+    raw_data = [
+        {
+            "source_team_id": "uwfra", "source_method": "html_scrape_paginated_archive",
+            "title_raw": "Female fallen Bolton Abbaey",
+            "content_text": "The team was called by Yorkshire Ambulance Service to assist a 78-year-old woman.",
+            "date_raw_ddmonyyyy": "16 Aug 2026", "incident_ref": "2026/31",
+            "attendees_count": "10", "duration_raw": "2hr 55min", "total_attendance_raw": "29hr 10min",
+            "link": "https://uwfra.org.uk/blog/article.php?id=346",
+        },
+        {
+            "source_team_id": "uwfra", "source_method": "html_scrape_paginated_archive",
+            "title_raw": "Sheep stuck in a bog",
+            "content_text": "One of our team members came across a sheep trapped in a bog.",
+            "date_raw_ddmonyyyy": "02 Aug 2026", "incident_ref": "2026/29",
+            "attendees_count": "7", "duration_raw": "1hr 38min", "total_attendance_raw": "11hr 26min",
+            "link": "https://uwfra.org.uk/blog/article.php?id=344",
+        },
+    ]
+    raw_path = tmp_path / "uwfra_incidents_raw.json"
+    raw_path.write_text(json.dumps(raw_data), encoding="utf-8")
+
+    df = clean_team_file(raw_path)
+
+    fallen = df.iloc[0]
+    assert fallen["date"] == "2026-08-16"
+    assert fallen["duration_minutes"] == 175
+    assert fallen["total_attendance_minutes"] == 1750
+    assert fallen["team_members_attended"] == 10
+    assert fallen["incident_id"] == "uwfra_2026/31"
+    assert fallen["time"] is None  # UWFRA gives no clock time
+
+    sheep = df.iloc[1]
+    assert sheep["activity_type"] == "animal_rescue"
+    assert sheep["duration_minutes"] == 98
+    assert sheep["total_attendance_minutes"] == 686
+
+
+def test_ovmro_still_works_after_uwfra_changes(tmp_path):
+    """
+    duration_minutes and team_members_attended were originally
+    OVMRO-exclusive fields — this confirms OVMRO's own parsing path is
+    completely untouched by adding UWFRA's parallel path alongside it.
+    """
+    import json
+    from clean_incidents import clean_team_file
+
+    raw_data = [{
+        "source_team_id": "ovmro", "source_method": "html_scrape_table",
+        "title_raw": "Tryfan", "content_text": "Climbing incident on Tryfan.",
+        "date_raw_ddmmyyyy": "14/08/2026", "duration_raw": "05:08",
+        "casualties_count": "1", "team_members_attended": "19",
+        "link": "https://ogwen-rescue.org.uk/1",
+    }]
+    raw_path = tmp_path / "ovmro_incidents_raw.json"
+    raw_path.write_text(json.dumps(raw_data), encoding="utf-8")
+
+    df = clean_team_file(raw_path)
+    row = df.iloc[0]
+    assert row["date"] == "2026-08-14"
+    assert row["duration_minutes"] == 308  # 5hr 8min in OVMRO's HH:MM format
+    assert row["team_members_attended"] == 19
+    assert row["total_attendance_minutes"] is None  # OVMRO doesn't have this field

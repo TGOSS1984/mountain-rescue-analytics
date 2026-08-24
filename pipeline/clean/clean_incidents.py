@@ -33,6 +33,15 @@ INTERIM_DIR = Path(__file__).resolve().parents[1] / "data" / "interim"
 
 # Ordered so more specific categories are checked before generic ones.
 ACTIVITY_KEYWORDS = [
+    (
+        "animal_rescue",
+        # UWFRA is the first source in this project to regularly respond
+        # to animal welfare callouts, not just human incidents — real
+        # examples: "Sheep stuck in a bog", "Stranded sheep", "Dog
+        # rescue North York Moors". Checked early since these titles
+        # rarely contain any other activity keyword to conflict with.
+        ["sheep", "dog rescue", "livestock", "animal welfare", "trapped animal"],
+    ),
     ("climbing", ["climber", "climbing", "crag", "abseil", "boulderer", "bouldering"]),
     ("cycling", ["cyclist", "mountain biker", "cycling", "bike"]),
     ("running", ["runner", "running", "fell race"]),
@@ -87,6 +96,43 @@ def duration_to_minutes(duration_str):
         return None
     hours, minutes = m.groups()
     return int(hours) * 60 + int(minutes)
+
+
+UWFRA_DURATION_RE = re.compile(r"(\d+)hr\s+(\d+)min")
+
+
+def uwfra_duration_to_minutes(duration_str):
+    """UWFRA gives duration as 'Xhr Ymin' — a different shape from
+    OVMRO's 'HH:MM', so this is a separate parser rather than trying to
+    force one regex to cover both. Used for both the Duration and Total
+    attendance fields, which share this same format in the source."""
+    m = UWFRA_DURATION_RE.search(duration_str or "")
+    if not m:
+        return None
+    hours, minutes = m.groups()
+    return int(hours) * 60 + int(minutes)
+
+
+DATE_DDMONYYYY_RE = re.compile(r"^(\d{1,2})\s+(\w{3})\s+(\d{4})$")
+_MONTH_ABBREV = {
+    "jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
+    "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12",
+}
+
+
+def parse_uwfra_date(date_str):
+    """UWFRA's archive already gives a clean 'DD Mon YYYY' string per
+    incident (e.g. '16 Aug 2026') — no need to hunt it out of free text
+    the way parse_date() does for Edale/UWFRA's narratives; just
+    normalise the format directly."""
+    m = DATE_DDMONYYYY_RE.match((date_str or "").strip())
+    if not m:
+        return None
+    day, month_abbrev, year = m.groups()
+    month = _MONTH_ABBREV.get(month_abbrev.lower())
+    if not month:
+        return None
+    return f"{year}-{month}-{int(day):02d}"
 
 
 def _first_match(pattern, text):
@@ -185,34 +231,59 @@ def clean_team_file(raw_path):
         title = html.unescape(title)
         stated_callout_type = item.get("callout_type_stated")
         is_ovmro = item["source_team_id"] == "ovmro"
+        is_uwfra = item["source_team_id"] == "uwfra"
 
         row = {
             "source_team_id": item["source_team_id"],
             "source_method": item["source_method"],
-            "incident_id": parse_incident_number(full_text) or parse_incident_number(title),
+            "incident_id": (
+                f"uwfra_{item['incident_ref']}" if is_uwfra and item.get("incident_ref")
+                else parse_incident_number(full_text) or parse_incident_number(title)
+            ),
             "location_text": title if not stated_callout_type and not is_ovmro else (
                 item.get("location_text_stated") if is_ovmro else _wasdale_location(title)
             ),
-            # OVMRO gives a clean pre-parsed date directly; other sources
-            # need it extracted from free text.
-            "date": parse_ddmmyyyy(item.get("date_raw_ddmmyyyy")) if is_ovmro else parse_date(full_text),
+            # OVMRO and UWFRA both give a clean pre-parsed date directly;
+            # Edale/Wasdale need it extracted from free text.
+            "date": (
+                parse_ddmmyyyy(item.get("date_raw_ddmmyyyy")) if is_ovmro
+                else parse_uwfra_date(item.get("date_raw_ddmonyyyy")) if is_uwfra
+                else parse_date(full_text)
+            ),
             # OVMRO's source data is an elapsed *duration*, not a clock-in
             # time, so there's no meaningful "time" value to set here —
             # left null rather than misusing duration as a timestamp.
-            "time": None if is_ovmro else parse_time(full_text),
+            # UWFRA likewise only gives a date, no time of day.
+            "time": None if (is_ovmro or is_uwfra) else parse_time(full_text),
             "activity_type": classify(full_text, ACTIVITY_KEYWORDS),
             "outcome": stated_callout_type if stated_callout_type else classify(full_text, OUTCOME_KEYWORDS, default="unrecorded"),
             "outcome_source": "stated_by_team" if stated_callout_type else "inferred_from_keywords",
             "narrative_raw": full_text.strip(),
             "source_url": item.get("link"),
-            # OVMRO-specific fields — null for every other source, which
-            # is honest: Edale and Wasdale simply don't publish this.
-            "duration_minutes": duration_to_minutes(item.get("duration_raw")) if is_ovmro else None,
+            # duration_minutes and team_members_attended were originally
+            # OVMRO-exclusive fields; UWFRA also publishes both (its own
+            # "Duration" and "Attendees" fields), so both sources now
+            # populate these — still null for Edale/Wasdale, which
+            # simply don't publish this.
+            "duration_minutes": (
+                duration_to_minutes(item.get("duration_raw")) if is_ovmro
+                else uwfra_duration_to_minutes(item.get("duration_raw")) if is_uwfra
+                else None
+            ),
             "casualties_count": (
                 int(item["casualties_count"]) if is_ovmro and item.get("casualties_count") else None
             ),
             "team_members_attended": (
-                int(item["team_members_attended"]) if is_ovmro and item.get("team_members_attended") else None
+                int(item["team_members_attended"]) if is_ovmro and item.get("team_members_attended")
+                else int(item["attendees_count"]) if is_uwfra and item.get("attendees_count")
+                else None
+            ),
+            # Genuinely unique to UWFRA — aggregate volunteer person-hours
+            # for the whole operation (not just headcount x duration;
+            # accounts for shift changes/rotating personnel, so it's kept
+            # as its own stated field rather than computed).
+            "total_attendance_minutes": (
+                uwfra_duration_to_minutes(item.get("total_attendance_raw")) if is_uwfra else None
             ),
         }
         rows.append(row)
