@@ -1,0 +1,10 @@
+# Vercel auto-detects any top-level api/ directory as Vercel
+# Serverless Functions. Our api/ folder is the FastAPI app deployed
+# separately on Render — it was never meant to run on Vercel, and
+# without this, Vercel builds a Python environment from
+# api/requirements.txt on every deploy for no reason (confirmed in a
+# real build log: "Installing required dependencies from
+# api/requirements.txt..." when only the static frontend should be
+# built here).
+api/
+pipeline/
