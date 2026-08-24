@@ -72,6 +72,27 @@ SOURCES = [
         "post_link_pattern": None,
         "parser": "ovmro_details_table",
     },
+    {
+        "team_id": "uwfra",
+        "team_name": "Upper Wharfedale Fell Rescue Association",
+        "region": "Yorkshire Dales",
+        "base_url": "https://uwfra.org.uk",
+        # Custom PHP CMS, not WordPress — paginated archive at
+        # /incidents (?yr=0&page=N for pages beyond the first), each
+        # entry linking to a full article at /blog/article.php?id=N.
+        # Genuinely richer than the other three sources in one way:
+        # gives Attendees, Duration, AND a "Total attendance" (person-
+        # hours) figure together — OVMRO gives the first two but not
+        # the third. Also the only source so far that responds to
+        # animal-welfare callouts (sheep, dogs) as well as human
+        # incidents, handled as its own category in clean_incidents.py.
+        # See ingest/scrape_uwfra.py.
+        "archive_url": "https://uwfra.org.uk/incidents",
+        "archive_url_template": "https://uwfra.org.uk/incidents?yr=0&page={page}",
+        "rest_api_candidate": None,
+        "post_link_pattern": None,
+        "parser": "uwfra_paginated_archive",
+    },
     # Add further teams here once their archive structure has been checked
     # by hand — see docs/data-dictionary.md "Adding a new source" section.
 ]
