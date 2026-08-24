@@ -69,6 +69,13 @@ REGION_VIEWBOXES = {
     "Peak District": ((53.55, -2.05), (53.05, -1.45)),
     "Lake District": ((54.75, -3.65), (54.30, -2.70)),
     "Snowdonia (Eryri)": ((53.25, -4.30), (52.85, -3.60)),
+    # Wider than the strict Yorkshire Dales National Park boundary —
+    # UWFRA's real incidents span Wharfedale, Nidderdale, Littondale and
+    # mid-Airedale, reaching as far as Knaresborough to the east
+    # (confirmed against real incident locations: Bolton Abbey, Scar
+    # House Reservoir, Grassington, Trollers Gill, Gargrave, Brimham
+    # Rocks, Knaresborough all fall within this box).
+    "Yorkshire Dales": ((54.30, -2.30), (53.85, -1.40)),
 }
 
 # Query suffix appended to each location before geocoding. Diagnostic
@@ -86,6 +93,7 @@ REGION_QUERY_SUFFIX = {
     "Peak District": "UK",
     "Lake District": "UK",
     "Snowdonia (Eryri)": "UK",
+    "Yorkshire Dales": "UK",
 }
 
 TEAM_REGION = {
@@ -93,6 +101,7 @@ TEAM_REGION = {
     "buxton": "Peak District",
     "wasdale": "Lake District",
     "ovmro": "Snowdonia (Eryri)",
+    "uwfra": "Yorkshire Dales",
 }
 HIGH_CONFIDENCE_TYPES = {"peak", "natural", "water", "hill", "valley"}
 

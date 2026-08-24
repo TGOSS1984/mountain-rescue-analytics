@@ -27,12 +27,14 @@ TEAM_REGION = {
     "buxton": "Peak District",
     "wasdale": "Lake District",
     "ovmro": "Snowdonia (Eryri)",
+    "uwfra": "Yorkshire Dales",
 }
 
 REGION_FILE_KEY = {
     "Peak District": "peak_district",
     "Lake District": "lake_district",
     "Snowdonia (Eryri)": "snowdonia",
+    "Yorkshire Dales": "yorkshire_dales",
 }
 
 # Open-Meteo's weathercode is a WMO code — collapsed here into a small

@@ -39,6 +39,7 @@ REGION_REFERENCE_POINTS = {
     "Peak District": (53.30, -1.75),
     "Lake District": (54.45, -3.20),
     "Snowdonia (Eryri)": (53.10, -3.95),
+    "Yorkshire Dales": (54.05, -1.90),  # near Grassington, UWFRA's own base
 }
 
 TEAM_REGION = {
@@ -46,6 +47,7 @@ TEAM_REGION = {
     "buxton": "Peak District",
     "wasdale": "Lake District",
     "ovmro": "Snowdonia (Eryri)",
+    "uwfra": "Yorkshire Dales",
 }
 
 DAILY_VARIABLES = "temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,weathercode,sunrise,sunset"
