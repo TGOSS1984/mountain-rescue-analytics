@@ -6,5 +6,16 @@
 # real build log: "Installing required dependencies from
 # api/requirements.txt..." when only the static frontend should be
 # built here).
-api/
-pipeline/
+#
+# CRITICAL: these patterns are anchored with a leading slash. An
+# earlier unanchored version ("api/", no leading slash) matched ANY
+# directory named "api" anywhere in the repo — including
+# src/api/, the frontend's own API client folder (client.js), which is
+# genuinely required by App.jsx and every chart component. That bug
+# silently broke every production deploy with an unresolvable-import
+# build failure, and cost a long, confusing debugging session before
+# being traced back here — verified definitively with `git
+# check-ignore`, not assumed: the unanchored pattern provably matched
+# src/api/client.js; the anchored version below provably does not.
+/api/
+/pipeline/
