@@ -1,8 +1,40 @@
 # UK Mountain Rescue Incident Analytics
 
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.116+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-warehouse-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Pandera](https://img.shields.io/badge/Pandera-schema%20validated-blueviolet)](https://pandera.readthedocs.io/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-map-199900?logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![Recharts](https://img.shields.io/badge/Recharts-charts-8884d8)](https://recharts.org/)
+[![Tests](https://img.shields.io/badge/tests-71%20passing-brightgreen)](#)
+[![Deployed on Vercel](https://img.shields.io/badge/frontend-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com/)
+[![Deployed on Render](https://img.shields.io/badge/API-Render-46E3B7?logo=render&logoColor=white)](https://render.com/)
+
+**[Live site](https://mountain-rescue-analytics.vercel.app)** · **[API docs](https://mountain-rescue-analytics-api.onrender.com/docs)**
+<!-- TODO: double check the live site link once the Vercel deploy's settled — using the default Vercel naming pattern here as a placeholder, API link is confirmed working -->
+
 A dashboard that takes real, publicly available UK mountain rescue callout data and turns it into something you can actually explore — where incidents happen, when, what kind, how the weather and the light played into it, and how three genuinely different bits of British upland terrain compare to each other.
 
 I built this as the analytics companion to my [UK Summit Guides](../uk-summit-guides) and [SummitLog UK](../summitlog-uk) projects, but it stands on its own. The other two are about planning a trip and logging one. This one is about what happens when a trip goes wrong, at a national scale, and what the numbers actually say about it.
+
+## Screenshots
+
+<!-- TODO: grab and drop these in before this goes properly live —
+     - overview: hero + the seasonal/weather charts together
+     - map: both marker and heatmap views
+     - regions: the region comparison panel + activity mix
+     maybe a mobile shot too if I remember. Same filenames below, just add the images to docs/screenshots/ -->
+
+![Overview](docs/screenshots/overview.png)
+*Overview — hero, seasonal pattern, and weather correlation*
+
+![Map view](docs/screenshots/map.png)
+*Incident map — marker and heatmap views*
+
+![Region comparison](docs/screenshots/regions.png)
+*Region comparison and activity mix*
 
 ## Why this exists
 
