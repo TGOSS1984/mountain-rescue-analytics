@@ -18,16 +18,18 @@ export default function Hero({ stats, loading, error }) {
       <div className="hero__bg" style={{ backgroundImage: `url(${heroImage})` }} aria-hidden="true" />
       <div className="hero__scrim" aria-hidden="true" />
       <div className="container hero__content">
-        <p className="eyebrow hero__eyebrow">Real callout data, three regions</p>
+        <p className="eyebrow hero__eyebrow">
+          Real callout data, {loading ? "…" : stats?.regions?.length ?? "several"} regions
+        </p>
         <h1 className="hero__title">
           Real callouts. Real weather.
           <br />
           Real terrain.
         </h1>
         <p className="hero__lead">
-          Every incident logged by mountain rescue teams in the Peak District, Lake
-          District, and Snowdonia, cleaned, geocoded, and laid out so you can see the
-          real pattern behind them.
+          Every incident logged by mountain rescue teams across the Peak District, Lake
+          District, Snowdonia, and the Yorkshire Dales, cleaned, geocoded, and laid out
+          so you can see the real pattern behind them.
         </p>
 
         {error && (

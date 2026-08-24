@@ -5,6 +5,7 @@ const TEAM_OPTIONS = [
   { value: "edale", label: "Peak District (Edale)" },
   { value: "wasdale", label: "Lake District (Wasdale)" },
   { value: "ovmro", label: "Snowdonia (OVMRO)" },
+  { value: "uwfra", label: "Yorkshire Dales (UWFRA)" },
 ];
 
 const ACTIVITY_OPTIONS = [
@@ -15,6 +16,7 @@ const ACTIVITY_OPTIONS = [
   { value: "running", label: "Running" },
   { value: "water", label: "Water" },
   { value: "search_missing_person", label: "Search — missing person" },
+  { value: "animal_rescue", label: "Animal rescue" },
   { value: "unspecified", label: "Unspecified" },
 ];
 
