@@ -144,6 +144,20 @@ The SQLite database (`pipeline/data/processed/incidents.db`) is committed to the
 
 Zero-config — Vercel auto-detects the Vite project and gets the build command and output directory right without any extra file. The only setup step is adding `VITE_API_BASE` under Settings → Environment Variables, pointing at the deployed Render API's URL. See `.env.example` for the local-dev equivalent.
 
+## Keeping the data fresh
+
+Left alone, the dataset is a static snapshot from whenever the pipeline was last run — it doesn't update itself. There's a scheduled GitHub Actions workflow (`.github/workflows/monthly-rescrape.yml`) that fixes that: it runs the full pipeline against the live sites on the 1st of every month, and if anything actually changed, commits the refreshed database straight back to `main`. Render's already set to auto-deploy on push, so that one commit is the whole loop — no manual step needed once it's running.
+
+One-time setup needed before this actually works: the geocode and elevation lookup caches (`pipeline/data/interim/geocode_cache.json` and `elevation_cache.json`) need to exist in the repo already, or every monthly run would re-resolve every location from scratch against Nominatim's rate limit rather than just the new ones. If they're not already committed:
+
+```bash
+git add pipeline/data/interim/geocode_cache.json pipeline/data/interim/elevation_cache.json
+git commit -m "chore: commit geocode/elevation caches for scheduled refresh"
+git push
+```
+
+Can also be triggered manually any time from the Actions tab on GitHub (`workflow_dispatch`), useful for testing it or forcing a refresh outside the normal schedule.
+
 ## A note on the data
 
 This project uses publicly published incident summary data. It doesn't include any personal or identifying information about anyone involved in a real callout — nothing here is about specific individuals, and the geocoding is deliberately kept at a level of precision (nearest named feature, not exact coordinates) that reflects how the source data itself is published.

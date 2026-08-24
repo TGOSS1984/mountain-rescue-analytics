@@ -1,0 +1,65 @@
+name: Monthly data refresh
+
+# Runs the full pipeline against the live sites on the 1st of every
+# month, then commits whatever changed (the database, and the two
+# lookup caches if new locations were found) straight back to main.
+# Render is set to auto-deploy on push to main, so this is the whole
+# loop closed end to end: scrape -> clean -> enrich -> commit -> Render
+# picks up the new commit and redeploys with fresh data, no manual
+# step required once this is set up.
+#
+# Can also be triggered manually from the Actions tab (workflow_dispatch)
+# for testing, or to force a refresh outside the normal schedule.
+
+on:
+  schedule:
+    - cron: "0 3 1 * *"  # 03:00 UTC on the 1st of every month
+  workflow_dispatch: {}
+
+permissions:
+  contents: write  # needed to push the refreshed data back to main
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # Pinned explicitly rather than left to auto-select — a real
+          # deployment earlier in this project auto-selected a
+          # bleeding-edge Python version that caused unrelated
+          # surprises. No reason to risk the same thing here.
+          python-version: "3.12"
+
+      - name: Install pipeline dependencies
+        working-directory: pipeline
+        run: pip install -r requirements.txt
+
+      - name: Run the full pipeline
+        working-directory: pipeline
+        run: python run_pipeline.py
+        # No --skip-scrape — this is specifically the monthly job whose
+        # whole purpose is re-scraping the live sites for anything new.
+        # The geocode/elevation caches committed to the repo mean only
+        # genuinely new locations cost a fresh lookup; everything
+        # already resolved is skipped, same as a normal local re-run.
+
+      - name: Commit and push refreshed data, if anything changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pipeline/data/processed/incidents.db \
+                  pipeline/data/interim/geocode_cache.json \
+                  pipeline/data/interim/elevation_cache.json
+          # Only commit if something actually changed — an empty commit
+          # here would trigger a needless Render redeploy for no reason.
+          if git diff --staged --quiet; then
+            echo "No changes to commit — data is already up to date."
+          else
+            git commit -m "chore: monthly automated data refresh"
+            git push
+          fi
