@@ -568,6 +568,11 @@ def notable_client(tmp_path, monkeypatch):
         ("edale", "Kinder", "2026-01-01", None, "walking", "x", "inferred_from_keywords",
          "Narrative.", "https://x.com", None, None, "matched", None,
          None, None, None, None, None, None, None, None),
+        # Genuinely longer than OVMRO's current longest (720) — proves
+        # UWFRA can actually win the record, not just participate.
+        ("uwfra", "How Stean Gorge", "2026-04-01", None, "walking", "x", "inferred_from_keywords",
+         "Narrative.", "https://uwfra.org.uk/blog/article.php?id=999", None, None, "matched", None,
+         900, None, 8, None, None, None, None, None),
     ]
     conn.executemany(
         "INSERT INTO incidents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows
@@ -586,12 +591,20 @@ def test_notable_stats_correctness(notable_client):
     resp = notable_client.get("/stats/notable")
     body = resp.json()
 
-    assert body["longest_operation"]["location_text"] == "Glyder Fach"
-    assert body["longest_operation"]["value"] == 720.0
+    # UWFRA's 900-minute operation is genuinely the longest — must win
+    # over OVMRO's 720, proving this isn't silently OVMRO-only anymore.
+    assert body["longest_operation"]["location_text"] == "How Stean Gorge"
+    assert body["longest_operation"]["value"] == 900.0
+    assert body["longest_operation"]["source_team_id"] == "uwfra"
+    assert body["longest_operation"]["region"] == "Yorkshire Dales"
+
+    # OVMRO's Aber Falls still correctly wins largest deployment (25 > 22 > 12 > 8)
     assert body["largest_deployment"]["location_text"] == "Aber Falls"
     assert body["largest_deployment"]["value"] == 25.0
-    assert body["total_operation_hours"] == pytest.approx(17.2, abs=0.01)
-    assert body["based_on_incident_count"] == 3  # Edale row excluded, no duration data
+    assert body["largest_deployment"]["source_team_id"] == "ovmro"
+
+    assert sorted(body["based_on_teams"]) == ["ovmro", "uwfra"]
+    assert body["based_on_incident_count"] == 4  # Edale row excluded, no duration data
 
 
 def test_notable_stats_never_includes_casualties(notable_client):

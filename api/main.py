@@ -58,6 +58,7 @@ TEAM_REGION = {
     "buxton": "Peak District",
     "wasdale": "Lake District",
     "ovmro": "Snowdonia (Eryri)",
+    "uwfra": "Yorkshire Dales",
 }
 
 
@@ -477,29 +478,39 @@ def activity_breakdown():
 @app.get("/stats/notable", response_model=NotableStats)
 def notable_stats():
     """
-    Uses OVMRO's duration/team-size fields, currently unused by any
-    other chart. Deliberately excludes anything built from
-    casualties_count — see NotableStats docstring for why.
+    Originally OVMRO-only; UWFRA now also publishes duration/team-size
+    data, so this queries across both rather than silently excluding
+    genuine UWFRA records. See NotableStats docstring for the full
+    reasoning, including why casualties_count is never used here.
     """
+    duration_teams = ("ovmro", "uwfra")
+    placeholders = ",".join("?" for _ in duration_teams)
+
     conn = get_connection()
     try:
         longest = conn.execute(
-            "SELECT location_text, date, duration_minutes, source_url FROM incidents "
-            "WHERE source_team_id = 'ovmro' AND duration_minutes IS NOT NULL "
-            "ORDER BY duration_minutes DESC LIMIT 1"
+            f"SELECT location_text, date, duration_minutes, source_url, source_team_id "
+            f"FROM incidents WHERE source_team_id IN ({placeholders}) "
+            f"AND duration_minutes IS NOT NULL "
+            f"ORDER BY duration_minutes DESC LIMIT 1",
+            duration_teams,
         ).fetchone()
 
         largest = conn.execute(
-            "SELECT location_text, date, team_members_attended, source_url FROM incidents "
-            "WHERE source_team_id = 'ovmro' AND team_members_attended IS NOT NULL "
-            "ORDER BY team_members_attended DESC LIMIT 1"
+            f"SELECT location_text, date, team_members_attended, source_url, source_team_id "
+            f"FROM incidents WHERE source_team_id IN ({placeholders}) "
+            f"AND team_members_attended IS NOT NULL "
+            f"ORDER BY team_members_attended DESC LIMIT 1",
+            duration_teams,
         ).fetchone()
 
         aggregates = conn.execute(
-            "SELECT SUM(duration_minutes) as total_minutes, "
-            "       AVG(team_members_attended) as avg_team, "
-            "       COUNT(*) as n "
-            "FROM incidents WHERE source_team_id = 'ovmro' AND duration_minutes IS NOT NULL"
+            f"SELECT SUM(duration_minutes) as total_minutes, "
+            f"       AVG(team_members_attended) as avg_team, "
+            f"       COUNT(*) as n "
+            f"FROM incidents WHERE source_team_id IN ({placeholders}) "
+            f"AND duration_minutes IS NOT NULL",
+            duration_teams,
         ).fetchone()
     finally:
         conn.close()
@@ -508,14 +519,18 @@ def notable_stats():
         longest_operation=NotableRecord(
             location_text=longest["location_text"], date=longest["date"],
             value=longest["duration_minutes"], source_url=longest["source_url"],
+            source_team_id=longest["source_team_id"],
+            region=TEAM_REGION.get(longest["source_team_id"], "Unknown"),
         ) if longest else None,
         largest_deployment=NotableRecord(
             location_text=largest["location_text"], date=largest["date"],
             value=largest["team_members_attended"], source_url=largest["source_url"],
+            source_team_id=largest["source_team_id"],
+            region=TEAM_REGION.get(largest["source_team_id"], "Unknown"),
         ) if largest else None,
         total_operation_hours=round((aggregates["total_minutes"] or 0) / 60, 1),
         average_team_size=round(aggregates["avg_team"], 1) if aggregates["avg_team"] else None,
-        based_on_team="ovmro",
+        based_on_teams=sorted(duration_teams),
         based_on_incident_count=aggregates["n"] or 0,
     )
 

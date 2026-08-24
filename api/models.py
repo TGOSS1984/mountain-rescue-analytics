@@ -27,9 +27,10 @@ class Incident(BaseModel):
     lon: Optional[float] = None
     geocode_status: str
     geocode_confidence: Optional[str] = None
-    # OVMRO-only fields — null for every other source, same as in the
-    # pipeline. See docs/data-dictionary.md for why these aren't
-    # zero-filled.
+    # duration_minutes/team_members_attended: originally OVMRO-only,
+    # now also populated by UWFRA — null for Edale/Wasdale, which
+    # simply don't publish this. casualties_count remains OVMRO-only.
+    # See docs/data-dictionary.md for why these aren't zero-filled.
     duration_minutes: Optional[float] = None
     casualties_count: Optional[float] = None
     team_members_attended: Optional[float] = None
@@ -57,6 +58,9 @@ class Incident(BaseModel):
     is_bank_holiday: Optional[bool] = None
     day_of_week: Optional[str] = None
     is_weekend: Optional[bool] = None
+    # UWFRA-only — aggregate volunteer person-hours for the whole
+    # operation. Null for every other source.
+    total_attendance_minutes: Optional[float] = None
 
 
 class WeatherBreakdown(BaseModel):
@@ -184,24 +188,34 @@ class NotableRecord(BaseModel):
     date: Optional[str] = None
     value: float
     source_url: Optional[str] = None
+    # Which team/region this record came from — matters now that more
+    # than one source can contribute to "longest operation" or "largest
+    # deployment"; without this, a UWFRA record would look identical to
+    # an OVMRO one with no way to tell them apart.
+    source_team_id: str
+    region: str
 
 
 class NotableStats(BaseModel):
     """
-    OVMRO's incident log is the only source that records operation
-    duration and team size — genuinely unused data otherwise, worth
-    surfacing. Deliberately excludes anything built from
-    casualties_count: turning a real operation (possibly involving
-    injury or worse) into a "record" would be poor taste regardless of
-    how factually accurate the number is. Longest operation and largest
-    deployment are shown as plain operational facts (location, duration,
-    date) with no narrative text, same as anywhere else these appear.
+    Originally OVMRO-exclusive — that team's incident log was the only
+    source with duration/team-size data when this was first built.
+    UWFRA also publishes both fields now, so this queries across both
+    sources rather than staying silently OVMRO-only, which would have
+    excluded genuine UWFRA records from ever winning "longest
+    operation" even if they were actually longer. Deliberately still
+    excludes anything built from casualties_count: turning a real
+    operation (possibly involving injury or worse) into a "record"
+    would be poor taste regardless of how factually accurate the
+    number is. Longest operation and largest deployment are shown as
+    plain operational facts (location, duration, date, and now which
+    team) with no narrative text, same as anywhere else these appear.
     """
     longest_operation: Optional[NotableRecord] = None  # value = duration_minutes
     largest_deployment: Optional[NotableRecord] = None  # value = team_members_attended
     total_operation_hours: float
     average_team_size: Optional[float] = None
-    based_on_team: str
+    based_on_teams: list[str]
     based_on_incident_count: int
 
 
