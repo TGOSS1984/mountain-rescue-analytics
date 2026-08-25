@@ -44,13 +44,14 @@ CACHE_PATH = INTERIM_DIR / "geocode_cache.json"
 
 # Bump this whenever the geocoding logic changes in a way that could
 # change results for previously-cached queries (e.g. the viewbox shape
-# fix). Cache entries written under an older version are discarded
-# rather than silently reused — this is exactly the bug that made the
-# viewbox fix look like it hadn't worked: the cache kept replaying
-# "no_match" answers recorded by the old broken code, and nothing in
-# the cache format could tell the difference between "genuinely no
-# match" and "no match because the query itself was malformed."
-CACHE_VERSION = 2
+# fix, or the UWFRA place-name extraction fix). Cache entries written
+# under an older version are discarded rather than silently reused —
+# this is exactly the bug that made the viewbox fix look like it
+# hadn't worked: the cache kept replaying "no_match" answers recorded
+# by the old broken code, and nothing in the cache format could tell
+# the difference between "genuinely no match" and "no match because
+# the query itself was malformed."
+CACHE_VERSION = 3
 
 # Rough bounding boxes per region, so "Kinder" (Peak District) and
 # "Kinder-alike-sounding-place-in-Wales" don't collide, and so a bare
@@ -104,6 +105,48 @@ TEAM_REGION = {
     "uwfra": "Yorkshire Dales",
 }
 HIGH_CONFIDENCE_TYPES = {"peak", "natural", "water", "hill", "valley"}
+
+
+def extract_place_name_for_geocoding(title):
+    """
+    UWFRA's location_text is the full incident title ("Female fallen
+    Bolton Abbey"), not a clean place name the way the other three
+    sources' titles are ("Tryfan", "Kinder Scout") — sending the whole
+    title as a Nominatim query performed badly (a real production run
+    matched only ~1% of UWFRA incidents), because Nominatim is a
+    place-name search engine, not an NLP entity extractor, and
+    "Female fallen" prepended to a real place name actively works
+    against the match rather than just adding harmless noise.
+
+    This extracts the likely place-name portion for the geocoding
+    query specifically — the display location_text is untouched
+    everywhere else. Heuristic: the longest trailing run of
+    capitalised words, excluding the title's first word (which is
+    always capitalised regardless of whether it's a real proper noun,
+    since it's the start of a title). Verified against 20 real UWFRA
+    titles before use — 20/20 correct, including titles with no
+    extractable place name at all ("Sheep stuck in a bog" -> None,
+    correctly left ungeocoded rather than guessed at) and titles with
+    genuine source typos preserved as-is ("Incident Bolon Abbey" ->
+    "Bolon Abbey", not silently corrected to "Bolton Abbey").
+
+    Deliberately NOT applied to the other three sources: confirmed
+    with real examples that it would wrongly truncate their
+    already-clean two-word place names ("Kinder Scout" -> "Scout",
+    "Great Gable" -> "Gable") by stripping what looks like a
+    descriptive first word but is actually just the first half of the
+    real name.
+    """
+    words = title.split()
+    if len(words) <= 1:
+        return None
+    trailing = []
+    for word in reversed(words[1:]):
+        if word[:1].isupper():
+            trailing.insert(0, word)
+        else:
+            break
+    return " ".join(trailing) if trailing else None
 
 
 def _load_cache():
@@ -161,7 +204,19 @@ def geocode_all(df, location_col="location_text", team_col="source_team_id"):
         # names are often single words ("Kinder", "Win Hill", "Tryfan")
         # that are ambiguous without regional context, and the same name
         # can plausibly exist in more than one of our three regions.
-        query = f"{location_text}, {query_suffix}"
+        #
+        # UWFRA specifically uses the extracted place name for the
+        # query (see extract_place_name_for_geocoding's docstring for
+        # why) — but geocode_query falls back to the full location_text
+        # if no place name could be extracted, so titles like "Sheep
+        # stuck in a bog" still get a genuine attempt rather than being
+        # skipped outright, even though that attempt will likely fail
+        # honestly rather than being forced to match something wrong.
+        if team_id == "uwfra":
+            geocode_query = extract_place_name_for_geocoding(location_text) or location_text
+        else:
+            geocode_query = location_text
+        query = f"{geocode_query}, {query_suffix}"
 
         # Progress feedback: this step is genuinely slow (Nominatim's
         # usage policy caps us at ~1 request/second) and prints nothing
