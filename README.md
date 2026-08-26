@@ -12,6 +12,8 @@
 [![Deployed on Vercel](https://img.shields.io/badge/frontend-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com/)
 [![Deployed on Render](https://img.shields.io/badge/API-Render-46E3B7?logo=render&logoColor=white)](https://render.com/)
 
+![Overview](docs/screenshots/homepage-mockup.png)
+
 **[Live site](https://mountain-rescue-analytics.vercel.app)** · **[API docs](https://mountain-rescue-analytics-api.onrender.com/docs)**
 <!-- TODO: double check the live site link once the Vercel deploy's settled — using the default Vercel naming pattern here as a placeholder, API link is confirmed working -->
 
@@ -20,12 +22,6 @@ A dashboard that takes real, publicly available UK mountain rescue callout data 
 I built this as the analytics companion to my [UK Summit Guides](../uk-summit-guides) and [SummitLog UK](../summitlog-uk) projects, but it stands on its own. The other two are about planning a trip and logging one. This one is about what happens when a trip goes wrong, at a national scale, and what the numbers actually say about it.
 
 ## Screenshots
-
-<!-- TODO: grab and drop these in before this goes properly live —
-     - overview: hero + the seasonal/weather charts together
-     - map: both marker and heatmap views
-     - regions: the region comparison panel + activity mix
-     maybe a mobile shot too if I remember. Same filenames below, just add the images to docs/screenshots/ -->
 
 ![Overview](docs/screenshots/overview.png)
 *Overview — hero, seasonal pattern, and weather correlation*
