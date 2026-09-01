@@ -5712,6 +5712,42 @@
       "lon": -3.2333227,
       "status": "matched",
       "confidence": "low"
+    },
+    "ovmro:tryfan, south ridge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:tryfan, summmit area": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:y garn, north east ridge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:kirkfell": {
+      "lat": 54.4888551,
+      "lon": -3.2463865,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "wasdale:green how, scafell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "edale:wooller knoll": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
     }
   }
 }
