@@ -5748,6 +5748,132 @@
       "lon": null,
       "status": "no_match",
       "confidence": null
+    },
+    "ovmro:pen llithrig y wrach": {
+      "lat": 53.142251,
+      "lon": -3.9207771,
+      "status": "matched",
+      "confidence": "high"
+    },
+    "ovmro:y garn, south ridge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:tregarth": {
+      "lat": 53.1902945,
+      "lon": -4.0904847,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "ovmro:betws y coed, jubilee path": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:gwydyr forest, marin trail": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:carnedd dafydd, crib lem": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:glyderau, castell y gwynt": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:brown tongue, scafell pike": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:stanley ghyll, eskdale": {
+      "lat": 54.383776,
+      "lon": -3.2722947,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "wasdale:dent fell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:great end": {
+      "lat": 54.4649543,
+      "lon": -3.1945226,
+      "status": "matched",
+      "confidence": "high"
+    },
+    "wasdale:lords rake, scafell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:rosthwaite, keswick": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "edale:alport castle": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "edale:burbage plantation": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "edale:ramsley reservoir": {
+      "lat": 53.2690352,
+      "lon": -1.5720644,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "edale:bradwell edge": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "edale:treak cliffe": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "edale:rowland cote": {
+      "lat": 53.3761075,
+      "lon": -1.7910007,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "uwfra:fallen walker angram reservoir": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "uwfra:injured mountain biker pinhaw": {
+      "lat": 53.9216426,
+      "lon": -2.0863859,
+      "status": "matched",
+      "confidence": "low"
     }
   }
 }
