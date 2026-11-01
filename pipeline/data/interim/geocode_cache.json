@@ -5874,6 +5874,72 @@
       "lon": -2.0863859,
       "status": "matched",
       "confidence": "low"
+    },
+    "edale:upper burbage": {
+      "lat": 53.343366,
+      "lon": -1.6099512,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "wasdale:skew gill, great end": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:gavel neese, great gable": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:great hall gill": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:cam spout, scafell": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:brackenclose, wasdale": {
+      "lat": 54.4544693,
+      "lon": -3.259096,
+      "status": "matched",
+      "confidence": "low"
+    },
+    "wasdale:dropping crag, scafell pike": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "wasdale:burnmoor tarn": {
+      "lat": 54.4283302,
+      "lon": -3.2595596,
+      "status": "matched",
+      "confidence": "high"
+    },
+    "ovmro:tryfan, north ridge, bastow gulley": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:cwm llafar": {
+      "lat": null,
+      "lon": null,
+      "status": "no_match",
+      "confidence": null
+    },
+    "ovmro:pen yr ole wen": {
+      "lat": 53.1376004,
+      "lon": -4.010609,
+      "status": "matched",
+      "confidence": "high"
     }
   }
 }
